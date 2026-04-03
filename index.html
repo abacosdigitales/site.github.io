@@ -201,11 +201,12 @@
     <div class="contact-detail"><span class="c-dot"></span><strong>Rosario, Santa Fe, Argentina</strong></div>
   </div>
   <div class="contact-form">
-    <input type="text" placeholder="Tu nombre" />
-    <input type="email" placeholder="Tu correo electrónico" />
-    <input type="text" placeholder="Empresa (opcional)" />
-    <textarea placeholder="Contanos sobre tu proyecto..."></textarea>
-    <button class="btn-send">Enviar mensaje →</button>
+    <input type="text" id="nombre" placeholder="Tu nombre" />
+    <input type="email" id="email" placeholder="Tu correo electrónico" />
+    <input type="text" id="empresa" placeholder="Empresa (opcional)" />
+    <textarea id="mensaje" placeholder="Contanos sobre tu proyecto..."></textarea>
+    <button class="btn-send" id="btn-enviar" onclick="enviarFormulario()">Enviar mensaje →</button>
+    <div id="form-status" style="font-size:0.82rem;text-align:center;min-height:1.2rem;"></div>
   </div>
 </div>
 
@@ -221,5 +222,64 @@
 </a>
 <div class="wa-tooltip">Escribinos por WhatsApp</div>
 
+
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  // =====================================================
+  // CONFIGURACION EMAILJS
+  // Reemplaza estos valores con los de tu cuenta EmailJS
+  // =====================================================
+  const EMAILJS_PUBLIC_KEY  = "TU_PUBLIC_KEY";   // Account > API Keys
+  const EMAILJS_SERVICE_ID  = "TU_SERVICE_ID";   // Email Services
+  const EMAILJS_TEMPLATE_ID = "TU_TEMPLATE_ID";  // Email Templates
+  // =====================================================
+
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+  function enviarFormulario() {
+    const nombre  = document.getElementById("nombre").value.trim();
+    const email   = document.getElementById("email").value.trim();
+    const empresa = document.getElementById("empresa").value.trim();
+    const mensaje = document.getElementById("mensaje").value.trim();
+    const status  = document.getElementById("form-status");
+    const btn     = document.getElementById("btn-enviar");
+
+    if (!nombre || !email || !mensaje) {
+      status.style.color = "#E8261A";
+      status.textContent = "Por favor completá nombre, email y mensaje.";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Enviando...";
+    status.style.color = "#888";
+    status.textContent = "Enviando tu mensaje...";
+
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      from_name:    nombre,
+      from_email:   email,
+      company:      empresa || "No especificada",
+      message:      mensaje,
+      to_email:     "abacosdigitales@gmail.com"
+    })
+    .then(() => {
+      status.style.color = "#25D366";
+      status.textContent = "¡Mensaje enviado! Te respondemos pronto.";
+      btn.textContent = "Mensaje enviado ✓";
+      document.getElementById("nombre").value  = "";
+      document.getElementById("email").value   = "";
+      document.getElementById("empresa").value = "";
+      document.getElementById("mensaje").value = "";
+    })
+    .catch((err) => {
+      status.style.color = "#E8261A";
+      status.textContent = "Hubo un error al enviar. Intentá de nuevo.";
+      btn.disabled = false;
+      btn.textContent = "Enviar mensaje →";
+      console.error("EmailJS error:", err);
+    });
+  }
+</script>
 </body>
 </html>
