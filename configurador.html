@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Configurá tu Trinidad — Ábacosdigitales</title>
+<meta name="description" content="Configurá tu PC Trinidad a medida. Elegí procesador, RAM, SSD, placa de video, SO y más. Cotización instantánea por WhatsApp."/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0A0A0A;--bg2:#111111;--bg3:#181818;--bg4:#1e1e1e;
+  --fg:#FFFFFF;--muted:#888888;
+  --accent:#E8261A;--accent-dim:rgba(232,38,26,0.12);--accent-border:rgba(232,38,26,0.35);
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --green:#2DC79A;--blue:#3B8BD4;--amber:#F0A830;
+  --serif:"DM Serif Display",Georgia,serif;--sans:"DM Sans",system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--fg);min-height:100vh}
+
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1rem 3rem;background:rgba(10,10,10,0.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.logo-wrap{display:flex;align-items:center;gap:0.6rem;text-decoration:none}
+.logo-img{height:34px;width:34px;object-fit:contain}
+.logo-text{font-size:0.95rem;font-weight:700;color:var(--fg)}
+.logo-text span{color:var(--accent)}
+.nav-links-right{display:flex;align-items:center;gap:1.5rem}
+.nav-back{font-size:0.82rem;color:var(--muted);text-decoration:none;transition:color 0.2s}
+.nav-back:hover{color:var(--fg)}
+.nav-badge{font-size:0.72rem;font-weight:500;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);padding:0.25rem 0.75rem;border-radius:100px}
+
+.configurator{display:grid;grid-template-columns:1fr 360px;min-height:calc(100vh - 65px)}
+.config-left{padding:3rem;border-right:1px solid var(--border);overflow-y:auto}
+.config-right{position:sticky;top:65px;height:calc(100vh - 65px);overflow-y:auto;padding:2rem;display:flex;flex-direction:column;gap:1rem;background:var(--bg2)}
+
+.config-eyebrow{font-size:0.7rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.6rem}
+.config-left h1{font-family:var(--serif);font-size:2rem;letter-spacing:-0.02em;line-height:1.1;margin-bottom:0.5rem}
+.config-left h1 em{font-style:italic;color:var(--accent)}
+.config-left>p{font-size:0.85rem;color:var(--muted);line-height:1.6;margin-bottom:2.5rem}
+
+.step{margin-bottom:2rem}
+.step-label{font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.85rem;display:flex;align-items:center;gap:0.6rem}
+.step-num{width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:0.6rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-divider{border:none;border-top:1px solid var(--border);margin:2rem 0}
+
+.model-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.model-tab{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1rem 0.5rem;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
+.model-tab:hover{border-color:var(--border2)}
+.model-tab.active{border-color:var(--accent);background:var(--accent-dim)}
+.model-tab.active .mt-name{color:var(--accent)}
+.mt-led{width:8px;height:8px;border-radius:50%;margin:0 auto 0.6rem}
+.led-basic{background:#555}
+.led-school{background:var(--blue);box-shadow:0 0 6px var(--blue)}
+.led-compaq{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.led-hollow{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.mt-name{font-family:var(--serif);font-size:1.05rem;margin-bottom:0.2rem;transition:color 0.2s}
+.mt-platform{font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em}
+.mt-badge{position:absolute;top:-7px;left:50%;transform:translateX(-50%);font-size:0.52rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;padding:0.15rem 0.55rem;border-radius:100px;white-space:nowrap;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border)}
+
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.options-grid.cols3{grid-template-columns:repeat(3,1fr)}
+.option-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0.85rem 1rem;cursor:pointer;transition:all 0.2s}
+.option-card:hover{border-color:var(--border2);background:var(--bg4)}
+.option-card.selected{border-color:var(--accent);background:var(--accent-dim)}
+.opt-header{display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;margin-bottom:0.2rem}
+.opt-name{font-size:0.82rem;font-weight:500;line-height:1.3}
+.opt-check{width:16px;height:16px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;flex-shrink:0}
+.option-card.selected .opt-check{opacity:1}
+.opt-desc{font-size:0.7rem;color:var(--muted);line-height:1.4;margin-bottom:0.35rem}
+.opt-price{font-size:0.72rem;font-weight:500}
+.opt-price.inc{color:var(--green)}
+.opt-price.add{color:var(--accent)}
+.opt-price.free{color:var(--muted)}
+
+.color-row{display:flex;gap:10px;flex-wrap:wrap;padding-bottom:1rem}
+.color-swatch{width:42px;height:42px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.2s;position:relative}
+.color-swatch:hover{transform:scale(1.08)}
+.color-swatch.selected{border-color:#fff;box-shadow:0 0 0 3px var(--bg),0 0 0 5px #fff}
+.swatch-label{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:0.58rem;color:var(--muted);white-space:nowrap;text-align:center}
+
+/* SUMMARY PANEL */
+.summary-title{font-family:var(--serif);font-size:1.3rem;letter-spacing:-0.01em;margin-bottom:0.25rem}
+.summary-model{font-size:0.75rem;color:var(--muted);margin-bottom:1.25rem}
+.summary-pc{width:60px;height:80px;border-radius:8px;margin:0 auto 1.5rem;position:relative;transition:all 0.3s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.summary-led{width:6px;height:6px;border-radius:50%;position:absolute;top:8px;right:10px}
+.summary-stripe{width:65%;height:2px;border-radius:1px;opacity:0.3}
+.summary-stripe2{width:45%;height:2px;border-radius:1px;opacity:0.15}
+
+.summary-items{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1rem}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:0.7rem 1rem;border-bottom:1px solid var(--border);font-size:0.78rem}
+.summary-row:last-child{border-bottom:none}
+.summary-row-label{color:var(--muted)}
+.summary-row-val{font-weight:500;text-align:right;max-width:55%;font-size:0.75rem}
+.summary-row-val.empty{color:var(--muted);font-weight:400;font-style:italic}
+
+.price-box{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;text-align:center}
+.price-label{font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.35rem}
+.price-total{font-family:var(--serif);font-size:2rem;letter-spacing:-0.02em;color:var(--fg)}
+.price-total span{font-family:var(--sans);font-size:0.85rem;font-weight:400;color:var(--muted)}
+.price-note{font-size:0.68rem;color:var(--muted);margin-top:0.35rem}
+
+.btn-wa{width:100%;padding:0.9rem;background:#25D366;color:#fff;border:none;border-radius:12px;font-family:var(--sans);font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.6rem;transition:opacity 0.2s;text-decoration:none}
+.btn-wa:hover{opacity:0.9}
+.btn-reset{width:100%;padding:0.65rem;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;font-family:var(--sans);font-size:0.78rem;cursor:pointer;transition:all 0.2s}
+.btn-reset:hover{border-color:var(--border2);color:var(--fg)}
+
+.progress-bar{height:2px;background:var(--border);border-radius:1px;margin-bottom:2.5rem;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:1px;transition:width 0.4s ease}
+
+@media(max-width:900px){
+  .configurator{grid-template-columns:1fr}
+  .config-right{position:relative;height:auto;border-top:1px solid var(--border)}
+  .model-tabs{grid-template-columns:repeat(2,1fr)}
+  nav{padding:1rem 1.5rem}
+  .config-left{padding:2rem 1.5rem}
+  .config-right{padding:1.5rem}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo-wrap" href="index.html">
+    <img class="logo-img" src="data:image/png;base64,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" alt="Ábacosdigitales"/>
+    <div class="logo-text">ábacos<span>digitales</span></div>
+  </a>
+  <div class="nav-links-right">
+    <a href="trinidad.html" class="nav-back">← Línea Trinidad</a>
+    <span class="nav-badge">Configurador</span>
+  </div>
+</nav>
+
+<div class="configurator">
+
+  <!-- LEFT: CONFIG STEPS -->
+  <div class="config-left">
+    <div class="config-eyebrow">Línea Trinidad</div>
+    <h1>Armá tu <em>PC ideal</em></h1>
+    <p>Elegí tu modelo base y personalizá cada componente. El precio se actualiza en tiempo real.</p>
+
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:12%"></div></div>
+
+    <!-- STEP 1: MODEL -->
+    <div class="step">
+      <div class="step-label"><span class="step-num">1</span>Elegí tu modelo base</div>
+      <div class="model-tabs" id="modelTabs">
+        <div class="model-tab active" data-model="Basic" data-platform="AM4 · Serie 5000" data-base="850000" onclick="selectModel(this)">
+          <div class="mt-led led-basic"></div>
+          <div class="mt-name">Basic</div>
+          <div class="mt-platform">AM4</div>
+        </div>
+        <div class="model-tab" data-model="School" data-platform="AM4 · Serie 5000" data-base="920000" onclick="selectModel(this)">
+          <div class="mt-led led-school"></div>
+          <div class="mt-name">School</div>
+          <div class="mt-platform">AM4</div>
+        </div>
+        <div class="model-tab" data-model="Compaq" data-platform="AM5 · Serie 7000" data-base="1250000" onclick="selectModel(this)">
+          <div class="mt-led led-compaq"></div>
+          <div class="mt-name">Compaq</div>
+          <div class="mt-platform">AM5</div>
+        </div>
+        <div class="model-tab" data-model="Hollow" data-platform="AM5 · Serie 9000" data-base="2100000" onclick="selectModel(this)">
+          <div class="mt-badge">Top</div>
+          <div class="mt-led led-hollow"></div>
+          <div class="mt-name">Hollow</div>
+          <div class="mt-platform">AM5</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="step-divider"/>
+
+    <!-- STEP 2: CPU -->
+    <div class="step">
+      <div class="step-label"><span class="step-num">2</span>Procesador</div>
+      <div class="options-grid" id="cpuOptions">
+        <div class="option-card selected" data-group="cpu" data-name="Ryzen 5 5600" data-price="0" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Ryzen 5 5600</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">6 núcleos · 12 hilos · 4.4 GHz boost</div>
+          <div class="opt-price inc">Incluido</div>
+        </div>
+        <div class="option-card" data-group="cpu" data-name="Ryzen 5 5600X" data-price="45000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Ryzen 5 5600X</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">6 núcleos · 12 hilos · 4.6 GHz boost</div>
+          <div class="opt-price add">+ $45.000</div>
+        </div>
+        <div class="option-card" data-group="cpu" data-name="Ryzen 7 5700X" data-price="90000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Ryzen 7 5700X</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">8 núcleos · 16 hilos · 4.6 GHz boost</div>
+          <div class="opt-price add">+ $90.000</div>
+        </div>
+        <div class="option-card" data-group="cpu" data-name="Ryzen 9 5900X" data-price="180000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Ryzen 9 5900X</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">12 núcleos · 24 hilos · 4.8 GHz boost</div>
+          <div class="opt-price add">+ $180.000</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="step-divider"/>
+
+    <!-- STEP 3: RAM -->
+    <div class="step">
+      <div class="step-label"><span class="step-num">3</span>Memoria RAM</div>
+      <div class="options-grid cols3" id="ramOptions">
+        <div class="option-card selected" data-group="ram" data-name="8 GB DDR4" data-price="0" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">8 GB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">DDR4 3200 MHz</div>
+          <div class="opt-price inc">Incluido</div>
+        </div>
+        <div class="option-card" data-group="ram" data-name="16 GB DDR4" data-price="35000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">16 GB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">DDR4 3200 MHz</div>
+          <div class="opt-price add">+ $35.000</div>
+        </div>
+        <div class="option-card" data-group="ram" data-name="32 GB DDR4" data-price="90000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">32 GB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">DDR4 3600 MHz</div>
+          <div class="opt-price add">+ $90.000</div>
+        </div>
+        <div class="option-card" data-group="ram" data-name="64 GB DDR4" data-price="200000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">64 GB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">DDR4 3600 MHz Dual</div>
+          <div class="opt-price add">+ $200.000</div>
+        </div>
+        <div class="option-card" data-group="ram" data-name="16 GB DDR5" data-price="70000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">16 GB DDR5</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">DDR5 5600 MHz</div>
+          <div class="opt-price add">+ $70.000</div>
+        </div>
+        <div class="option-card" data-group="ram" data-name="32 GB DDR5" data-price="150000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">32 GB DDR5</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">DDR5 5600 MHz</div>
+          <div class="opt-price add">+ $150.000</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="step-divider"/>
+
+    <!-- STEP 4: SSD -->
+    <div class="step">
+      <div class="step-label"><span class="step-num">4</span>Almacenamiento SSD NVMe</div>
+      <div class="options-grid cols3" id="ssdOptions">
+        <div class="option-card selected" data-group="ssd" data-name="256 GB NVMe" data-price="0" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">256 GB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">PCIe 3.0 · 3.5 GB/s</div>
+          <div class="opt-price inc">Incluido</div>
+        </div>
+        <div class="option-card" data-group="ssd" data-name="512 GB NVMe" data-price="25000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">512 GB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">PCIe 3.0 · 3.5 GB/s</div>
+          <div class="opt-price add">+ $25.000</div>
+        </div>
+        <div class="option-card" data-group="ssd" data-name="1 TB NVMe" data-price="55000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">1 TB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">PCIe 4.0 · 7 GB/s</div>
+          <div class="opt-price add">+ $55.000</div>
+        </div>
+        <div class="option-card" data-group="ssd" data-name="2 TB NVMe" data-price="110000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">2 TB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">PCIe 4.0 · 7 GB/s</div>
+          <div class="opt-price add">+ $110.000</div>
+        </div>
+        <div class="option-card" data-group="ssd" data-name="1 TB NVMe PCIe 5.0" data-price="140000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">1 TB Gen5</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">PCIe 5.0 · 12 GB/s</div>
+          <div class="opt-price add">+ $140.000</div>
+        </div>
+        <div class="option-card" data-group="ssd" data-name="2 TB NVMe PCIe 5.0" data-price="260000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">2 TB Gen5</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">PCIe 5.0 · 12 GB/s</div>
+          <div class="opt-price add">+ $260.000</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="step-divider"/>
+
+    <!-- STEP 5: GPU -->
+    <div class="step">
+      <div class="step-label"><span class="step-num">5</span>Placa de video</div>
+      <div class="options-grid" id="gpuOptions">
+        <div class="option-card selected" data-group="gpu" data-name="Sin GPU dedicada (integrada)" data-price="0" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Sin GPU dedicada</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Gráficos integrados AMD Radeon</div>
+          <div class="opt-price inc">Incluido</div>
+        </div>
+        <div class="option-card" data-group="gpu" data-name="RX 6600 8 GB" data-price="280000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">RX 6600 8 GB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">1080p gaming · RDNA 2</div>
+          <div class="opt-price add">+ $280.000</div>
+        </div>
+        <div class="option-card" data-group="gpu" data-name="RX 7600 8 GB" data-price="380000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">RX 7600 8 GB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">1080p / 1440p · RDNA 3</div>
+          <div class="opt-price add">+ $380.000</div>
+        </div>
+        <div class="option-card" data-group="gpu" data-name="RX 7700 XT 12 GB" data-price="520000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">RX 7700 XT 12 GB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">1440p premium · RDNA 3</div>
+          <div class="opt-price add">+ $520.000</div>
+        </div>
+        <div class="option-card" data-group="gpu" data-name="RX 7900 GRE 16 GB" data-price="850000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">RX 7900 GRE 16 GB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">4K gaming · RDNA 3 top</div>
+          <div class="opt-price add">+ $850.000</div>
+        </div>
+        <div class="option-card" data-group="gpu" data-name="RTX 4070 12 GB" data-price="950000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">RTX 4070 12 GB</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">4K + DLSS 3 · Ada Lovelace</div>
+          <div class="opt-price add">+ $950.000</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="step-divider"/>
+
+    <!-- STEP 6: OS -->
+    <div class="step">
+      <div class="step-label"><span class="step-num">6</span>Sistema operativo</div>
+      <div class="options-grid cols3" id="osOptions">
+        <div class="option-card selected" data-group="os" data-name="Sin SO (FreeDOS)" data-price="0" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Sin SO</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">FreeDOS incluido</div>
+          <div class="opt-price free">—</div>
+        </div>
+        <div class="option-card" data-group="os" data-name="Windows 11 Home" data-price="65000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Win 11 Home</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Licencia original OEM</div>
+          <div class="opt-price add">+ $65.000</div>
+        </div>
+        <div class="option-card" data-group="os" data-name="Windows 11 Pro" data-price="90000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Win 11 Pro</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Licencia original OEM</div>
+          <div class="opt-price add">+ $90.000</div>
+        </div>
+        <div class="option-card" data-group="os" data-name="Ubuntu 24.04 LTS" data-price="0" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Ubuntu 24.04</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Linux · Gratis</div>
+          <div class="opt-price free">Sin costo</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="step-divider"/>
+
+    <!-- STEP 7: COOLER -->
+    <div class="step">
+      <div class="step-label"><span class="step-num">7</span>Cooler</div>
+      <div class="options-grid" id="coolerOptions">
+        <div class="option-card selected" data-group="cooler" data-name="Cooler stock AMD" data-price="0" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Stock AMD</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Wraith Stealth incluido</div>
+          <div class="opt-price inc">Incluido</div>
+        </div>
+        <div class="option-card" data-group="cooler" data-name="Cooler torre 120mm" data-price="28000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Torre 120mm</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Mejor disipación · Más silencioso</div>
+          <div class="opt-price add">+ $28.000</div>
+        </div>
+        <div class="option-card" data-group="cooler" data-name="Cooler torre dual fan" data-price="55000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Torre Dual Fan</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Alto rendimiento · OC friendly</div>
+          <div class="opt-price add">+ $55.000</div>
+        </div>
+        <div class="option-card" data-group="cooler" data-name="Refrigeración líquida 240mm" data-price="120000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Líquida 240mm</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">AIO · Máxima disipación</div>
+          <div class="opt-price add">+ $120.000</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="step-divider"/>
+
+    <!-- STEP 8: GABINETE -->
+    <div class="step">
+      <div class="step-label"><span class="step-num">8</span>Gabinete</div>
+      <div class="options-grid" id="caseOptions">
+        <div class="option-card selected" data-group="case" data-name="Gabinete estándar negro" data-price="0" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Estándar Negro</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">ATX Mid · Panel sólido</div>
+          <div class="opt-price inc">Incluido</div>
+        </div>
+        <div class="option-card" data-group="case" data-name="Gabinete vidrio templado negro" data-price="35000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Vidrio Templado</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Panel lateral transparente</div>
+          <div class="opt-price add">+ $35.000</div>
+        </div>
+        <div class="option-card" data-group="case" data-name="Gabinete RGB vidrio blanco" data-price="65000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">RGB Blanco</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Vidrio + fans RGB incluidos</div>
+          <div class="opt-price add">+ $65.000</div>
+        </div>
+        <div class="option-card" data-group="case" data-name="Gabinete Full Tower" data-price="95000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Full Tower</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">E-ATX · Máximo espacio</div>
+          <div class="opt-price add">+ $95.000</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="step-divider"/>
+
+    <!-- STEP 9: PERIFERICOS -->
+    <div class="step">
+      <div class="step-label"><span class="step-num">9</span>Periféricos</div>
+      <div class="options-grid" id="periOptions">
+        <div class="option-card selected" data-group="peri" data-name="Sin periféricos" data-price="0" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Sin periféricos</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Solo el equipo</div>
+          <div class="opt-price free">—</div>
+        </div>
+        <div class="option-card" data-group="peri" data-name="Kit teclado + mouse básico" data-price="22000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Kit básico</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Teclado + mouse USB</div>
+          <div class="opt-price add">+ $22.000</div>
+        </div>
+        <div class="option-card" data-group="peri" data-name="Kit teclado mecánico + mouse gaming" data-price="75000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Kit gaming</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Mecánico + mouse 6400 DPI</div>
+          <div class="opt-price add">+ $75.000</div>
+        </div>
+        <div class="option-card" data-group="peri" data-name="Kit inalámbrico premium" data-price="110000" onclick="selectOption(this)">
+          <div class="opt-header"><span class="opt-name">Kit inalámbrico</span><div class="opt-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+          <div class="opt-desc">Teclado + mouse Bluetooth</div>
+          <div class="opt-price add">+ $110.000</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: SUMMARY -->
+  <div class="config-right">
+    <div style="text-align:center">
+      <div style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem">Tu configuración</div>
+      <!-- PC Preview -->
+      <div id="pcPreview" style="width:56px;height:76px;border-radius:8px;margin:0 auto 1rem;background:#1e1e1e;border:1px solid rgba(255,255,255,0.08);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transition:all 0.4s">
+        <div id="previewLed" style="width:6px;height:6px;border-radius:50%;background:#555;position:absolute;top:8px;right:9px;transition:all 0.4s"></div>
+        <div id="previewStripe" style="width:65%;height:2px;border-radius:1px;opacity:0.2;background:#fff;transition:all 0.4s"></div>
+        <div style="width:45%;height:2px;border-radius:1px;opacity:0.1;background:#fff"></div>
+      </div>
+      <div class="summary-title" id="summaryModel">Basic</div>
+      <div class="summary-model" id="summaryPlatform">AM4 · Serie 5000</div>
+    </div>
+
+    <div class="summary-items" id="summaryItems">
+      <div class="summary-row"><span class="summary-row-label">Procesador</span><span class="summary-row-val" id="sCpu">Ryzen 5 5600</span></div>
+      <div class="summary-row"><span class="summary-row-label">RAM</span><span class="summary-row-val" id="sRam">8 GB DDR4</span></div>
+      <div class="summary-row"><span class="summary-row-label">SSD</span><span class="summary-row-val" id="sSsd">256 GB NVMe</span></div>
+      <div class="summary-row"><span class="summary-row-label">GPU</span><span class="summary-row-val" id="sGpu">Integrada</span></div>
+      <div class="summary-row"><span class="summary-row-label">SO</span><span class="summary-row-val" id="sSo">Sin SO</span></div>
+      <div class="summary-row"><span class="summary-row-label">Cooler</span><span class="summary-row-val" id="sCooler">Stock AMD</span></div>
+      <div class="summary-row"><span class="summary-row-label">Gabinete</span><span class="summary-row-val" id="sCase">Estándar Negro</span></div>
+      <div class="summary-row"><span class="summary-row-label">Periféricos</span><span class="summary-row-val" id="sPeri">Sin periféricos</span></div>
+    </div>
+
+    <div class="price-box">
+      <div class="price-label">Precio estimado</div>
+      <div class="price-total" id="totalPrice">$850.000 <span>ARS</span></div>
+      <div class="price-note">* Precio orientativo sujeto a disponibilidad</div>
+    </div>
+
+    <a id="btnWa" href="#" target="_blank" class="btn-wa">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Cotizar por WhatsApp
+    </a>
+    <button class="btn-reset" onclick="resetConfig()">Reiniciar configuración</button>
+  </div>
+</div>
+
+<script>
+const state = {
+  model: 'Basic', platform: 'AM4 · Serie 5000', base: 850000,
+  cpu: 'Ryzen 5 5600', ram: '8 GB DDR4', ssd: '256 GB NVMe',
+  gpu: 'Sin GPU dedicada (integrada)', os: 'Sin SO (FreeDOS)',
+  cooler: 'Cooler stock AMD', case: 'Gabinete estándar negro', peri: 'Sin periféricos',
+  prices: { cpu:0, ram:0, ssd:0, gpu:0, os:0, cooler:0, case:0, peri:0 }
+};
+
+const modelStyles = {
+  Basic:  { bg:'#1e1e1e', border:'rgba(255,255,255,0.08)', led:'#555', stripe:'#fff', shadow:'' },
+  School: { bg:'#111d2e', border:'rgba(55,138,221,0.25)',  led:'#3B8BD4', stripe:'#3B8BD4', shadow:'0 0 8px #3B8BD4' },
+  Compaq: { bg:'#1a1108', border:'rgba(186,117,23,0.25)',  led:'#F0A830', stripe:'#F0A830', shadow:'0 0 8px #F0A830' },
+  Hollow: { bg:'#120808', border:'rgba(232,38,26,0.4)',    led:'#E8261A', stripe:'#E8261A', shadow:'0 0 10px #E8261A' }
+};
+
+const cpuDefaults = {
+  Basic:  { name:'Ryzen 5 5600',   opts:['Ryzen 5 5600','Ryzen 5 5600X','Ryzen 7 5700X','Ryzen 9 5900X'] },
+  School: { name:'Ryzen 5 5600G',  opts:['Ryzen 5 5600G','Ryzen 7 5700G','Ryzen 9 5900X'] },
+  Compaq: { name:'Ryzen 5 7600',   opts:['Ryzen 5 7600','Ryzen 7 7700X','Ryzen 9 7900X'] },
+  Hollow: { name:'Ryzen 9 9900X',  opts:['Ryzen 7 9700X','Ryzen 9 9900X','Ryzen 9 9950X'] }
+};
+
+function fmt(n){ return '$' + n.toLocaleString('es-AR'); }
+
+function selectModel(el){
+  document.querySelectorAll('.model-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  state.model    = el.dataset.model;
+  state.platform = el.dataset.platform;
+  state.base     = parseInt(el.dataset.base);
+  updatePreview();
+  updateSummary();
+  updateWa();
+  updateProgress();
+}
+
+function selectOption(el){
+  const group = el.dataset.group;
+  document.querySelectorAll(`[data-group="${group}"]`).forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  const key = group === 'peri' ? 'peri' : group;
+  state[key] = el.dataset.name;
+  state.prices[key] = parseInt(el.dataset.price)||0;
+  updateSummary();
+  updateWa();
+  updateProgress();
+}
+
+function updatePreview(){
+  const s = modelStyles[state.model];
+  const p = document.getElementById('pcPreview');
+  const l = document.getElementById('previewLed');
+  const st = document.getElementById('previewStripe');
+  p.style.background = s.bg;
+  p.style.border = `1.5px solid ${s.border}`;
+  l.style.background = s.led;
+  l.style.boxShadow = s.shadow;
+  st.style.background = s.stripe;
+  document.getElementById('summaryModel').textContent = state.model;
+  document.getElementById('summaryPlatform').textContent = state.platform;
+}
+
+function updateSummary(){
+  document.getElementById('sCpu').textContent    = state.cpu;
+  document.getElementById('sRam').textContent    = state.ram;
+  document.getElementById('sSsd').textContent    = state.ssd;
+  document.getElementById('sGpu').textContent    = state.gpu.replace('Sin GPU dedicada (integrada)','Integrada').replace('Gabinete estándar negro','Estándar Negro');
+  document.getElementById('sSo').textContent     = state.os.replace('Sin SO (FreeDOS)','Sin SO');
+  document.getElementById('sCooler').textContent = state.cooler.replace('Cooler stock AMD','Stock AMD').replace('Cooler torre ','Torre ').replace('Refrigeración líquida 240mm','Líquida 240mm');
+  document.getElementById('sCase').textContent   = state.case.replace('Gabinete estándar negro','Estándar Negro').replace('Gabinete vidrio templado negro','Vidrio Templado').replace('Gabinete RGB vidrio blanco','RGB Blanco').replace('Gabinete Full Tower','Full Tower');
+  document.getElementById('sPeri').textContent   = state.peri.replace('Sin periféricos','Sin periféricos').replace('Kit teclado + mouse básico','Kit básico').replace('Kit teclado mecánico + mouse gaming','Kit gaming').replace('Kit inalámbrico premium','Inalámbrico');
+  const extras = Object.values(state.prices).reduce((a,b)=>a+b,0);
+  const total  = state.base + extras;
+  document.getElementById('totalPrice').innerHTML = fmt(total) + ' <span>ARS</span>';
+}
+
+function updateWa(){
+  const extras = Object.values(state.prices).reduce((a,b)=>a+b,0);
+  const total  = state.base + extras;
+  const msg =
+    `Hola! Quiero cotizar una PC Trinidad ${state.model}:%0A` +
+    `• Modelo: Trinidad ${state.model} (${state.platform})%0A` +
+    `• Procesador: ${state.cpu}%0A` +
+    `• RAM: ${state.ram}%0A` +
+    `• SSD: ${state.ssd}%0A` +
+    `• GPU: ${state.gpu}%0A` +
+    `• SO: ${state.os}%0A` +
+    `• Cooler: ${state.cooler}%0A` +
+    `• Gabinete: ${state.case}%0A` +
+    `• Periféricos: ${state.peri}%0A` +
+    `• Precio estimado: ${fmt(total)} ARS%0A` +
+    `%0AQuedo a la espera de la cotización. Gracias!`;
+  document.getElementById('btnWa').href = `https://wa.me/5491126972862?text=${msg}`;
+}
+
+function updateProgress(){
+  const filled = Object.values(state.prices).filter((v,i)=>i>0||v>=0).length;
+  const pct = Math.min(95, 12 + filled * 11);
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function resetConfig(){
+  document.querySelectorAll('.model-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.querySelectorAll('.option-card').forEach(c=>{
+    const isFirst = !c.previousElementSibling || c.previousElementSibling.dataset.group !== c.dataset.group;
+    c.classList.toggle('selected', isFirst);
+  });
+  Object.assign(state,{
+    model:'Basic', platform:'AM4 · Serie 5000', base:850000,
+    cpu:'Ryzen 5 5600', ram:'8 GB DDR4', ssd:'256 GB NVMe',
+    gpu:'Sin GPU dedicada (integrada)', os:'Sin SO (FreeDOS)',
+    cooler:'Cooler stock AMD', case:'Gabinete estándar negro', peri:'Sin periféricos',
+    prices:{cpu:0,ram:0,ssd:0,gpu:0,os:0,cooler:0,case:0,peri:0}
+  });
+  updatePreview();
+  updateSummary();
+  updateWa();
+  document.getElementById('progressFill').style.width = '12%';
+}
+
+updatePreview();
+updateSummary();
+updateWa();
+</script>
+</body>
+</html>
