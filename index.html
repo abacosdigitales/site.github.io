@@ -277,6 +277,68 @@
   }
   .faq-item.open .faq-answer { max-height: 300px; padding-bottom: 1.25rem; }
   @media(max-width:768px){ .faq-grid { grid-template-columns: 1fr; gap: 0; } }
+
+  .trinidad-banner {
+    margin: 0 4rem 0;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2rem;
+    padding: 3rem 3.5rem;
+    position: relative;
+    transition: border-color 0.3s;
+    text-decoration: none;
+  }
+  .trinidad-banner:hover { border-color: rgba(232,38,26,0.4); }
+  .trinidad-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 80% 50%, rgba(232,38,26,0.05) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .trinidad-banner-left { position: relative; z-index: 1; }
+  .trinidad-banner-eyebrow { font-size:0.7rem; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.75rem; }
+  .trinidad-banner-title { font-family:var(--serif); font-size:clamp(1.6rem,3vw,2.4rem); line-height:1.1; letter-spacing:-0.02em; color:var(--fg); margin-bottom:0.75rem; }
+  .trinidad-banner-title em { font-style:italic; color:var(--accent); }
+  .trinidad-banner-desc { font-size:0.875rem; color:var(--muted); line-height:1.7; font-weight:300; max-width:480px; margin-bottom:1.5rem; }
+  .trinidad-banner-models { display:flex; gap:0.5rem; flex-wrap:wrap; }
+  .trinidad-model-pill {
+    font-size:0.72rem; font-weight:500; padding:0.3rem 0.85rem;
+    border-radius:100px; border:1px solid var(--border);
+    color:var(--muted); background:var(--bg3);
+    transition: all 0.2s;
+  }
+  .trinidad-banner:hover .trinidad-model-pill { border-color:rgba(232,38,26,0.2); color:var(--fg); }
+  .trinidad-banner-pill-hollow { border-color:rgba(232,38,26,0.25) !important; color:var(--accent) !important; }
+  .trinidad-banner-right { position:relative; z-index:1; flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; gap:1.25rem; }
+  .trinidad-banner-cta {
+    display:inline-flex; align-items:center; gap:0.5rem;
+    font-size:0.9rem; font-weight:500; padding:0.8rem 1.75rem;
+    background:var(--accent); color:#fff;
+    border-radius:100px; transition:opacity 0.2s; white-space:nowrap;
+  }
+  .trinidad-banner:hover .trinidad-banner-cta { opacity:0.9; }
+  .trinidad-banner-sub { font-size:0.75rem; color:var(--muted); }
+  .trinidad-banner-pcs { display:flex; gap:8px; align-items:flex-end; }
+  .tb-pc { border-radius:6px; position:relative; }
+  .tb-pc-basic { width:28px; height:44px; background:#1e1e1e; border:1px solid rgba(255,255,255,0.08); }
+  .tb-pc-school { width:28px; height:44px; background:#111d2e; border:1px solid rgba(55,138,221,0.2); }
+  .tb-pc-compaq { width:22px; height:34px; background:#1a1108; border:1px solid rgba(186,117,23,0.2); }
+  .tb-pc-hollow { width:34px; height:52px; background:#120808; border:1.5px solid rgba(232,38,26,0.35); }
+  .tb-led { width:4px; height:4px; border-radius:50%; position:absolute; top:6px; right:6px; }
+  .tb-led-basic { background:#555; }
+  .tb-led-school { background:#3B8BD4; box-shadow:0 0 4px #3B8BD4; }
+  .tb-led-compaq { background:#F0A830; box-shadow:0 0 4px #F0A830; }
+  .tb-led-hollow { background:var(--accent); box-shadow:0 0 6px var(--accent); }
+  @media(max-width:768px){
+    .trinidad-banner { grid-template-columns:1fr; margin:0 1.5rem; padding:2rem; }
+    .trinidad-banner-right { align-items:flex-start; }
+    .trinidad-banner-pcs { display:none; }
+  }
 </style>
 </head>
 <body>
@@ -287,6 +349,7 @@
     <div class="logo-text">ábacos<span>digitales</span></div>
   </a>
   <ul class="nav-links">
+    <li><a href="trinidad.html">Trinidad</a></li>
     <li><a href="#servicios">Servicios</a></li>
     <li><a href="#proceso">Proceso</a></li>
     <li><a href="#testimonios">Clientes</a></li>
@@ -345,6 +408,32 @@
     </div>
   </div>
 </div>
+
+
+<a href="trinidad.html" class="trinidad-banner reveal" style="display:grid">
+  <div class="trinidad-banner-left">
+    <div class="trinidad-banner-eyebrow">Nuevo · Línea de Computadoras</div>
+    <div class="trinidad-banner-title">Conocé la línea <em>Trinidad</em></div>
+    <div class="trinidad-banner-desc">Cuatro modelos de desktop diseñados para cada necesidad. Procesadores AMD AM4 y AM5, SSD NVMe y configuración a medida. El hardware que tu negocio merece.</div>
+    <div class="trinidad-banner-models">
+      <span class="trinidad-model-pill">Basic</span>
+      <span class="trinidad-model-pill">School</span>
+      <span class="trinidad-model-pill">Compaq</span>
+      <span class="trinidad-model-pill trinidad-banner-pill-hollow">Hollow ★</span>
+    </div>
+  </div>
+  <div class="trinidad-banner-right">
+    <div class="trinidad-banner-pcs">
+      <div class="tb-pc tb-pc-basic"><div class="tb-led tb-led-basic"></div></div>
+      <div class="tb-pc tb-pc-school"><div class="tb-led tb-led-school"></div></div>
+      <div class="tb-pc tb-pc-compaq"><div class="tb-led tb-led-compaq"></div></div>
+      <div class="tb-pc tb-pc-hollow"><div class="tb-led tb-led-hollow"></div></div>
+    </div>
+    <div class="trinidad-banner-cta">Ver modelos →</div>
+    <div class="trinidad-banner-sub">Cotización sin compromiso</div>
+  </div>
+</a>
+
 
 <section id="servicios" class="reveal">
   <div class="section-tag">Servicios</div>
