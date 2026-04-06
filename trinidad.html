@@ -186,10 +186,11 @@ footer a:hover{color:var(--fg)}
   <ul class="nav-links">
     <li><a href="index.html">Inicio</a></li>
     <li><a href="#modelos" class="active">Línea Trinidad</a></li>
+    <li><a href="configurador.html">Configurador</a></li>
     <li><a href="index.html#servicios">Servicios</a></li>
     <li><a href="index.html#contacto">Contacto</a></li>
   </ul>
-  <a href="https://wa.me/5491126972862?text=Hola%2C%20me%20interesa%20una%20PC%20de%20la%20l%C3%ADnea%20Trinidad" target="_blank" class="nav-cta">Cotizá ahora</a>
+  <a href="configurador.html" class="nav-cta">Configurá tu PC →</a>
 </nav>
 
 <!-- HERO -->
@@ -200,7 +201,7 @@ footer a:hover{color:var(--fg)}
   <p class="hero-sub fade-in d2">Cuatro modelos diseñados para cada necesidad. Desde el uso cotidiano hasta la workstation más exigente. Todos con procesadores AMD y SSD NVMe.</p>
   <div class="hero-actions fade-in d3">
     <a href="#modelos" class="btn-primary">Ver modelos</a>
-    <a href="https://wa.me/5491126972862?text=Hola%2C%20quiero%20cotizar%20una%20PC%20Trinidad" target="_blank" class="btn-ghost">Cotizar por WhatsApp</a>
+    <a href="configurador.html" class="btn-ghost">Configurar mi PC →</a>
   </div>
   <!-- PC Illustration SVG -->
   <div class="pc-hero-wrap fade-in d4">
@@ -282,7 +283,7 @@ footer a:hover{color:var(--fg)}
       <div class="model-price-wrap">
         <div class="model-price-from">Desde</div>
         <div class="model-price">$850.000 <span>ARS</span></div>
-        <a href="https://wa.me/5491126972862?text=Hola%2C%20me%20interesa%20la%20Trinidad%20Basic" target="_blank" class="btn-model btn-model-ghost">Cotizar</a>
+        <a href="configurador.html?model=Basic" class="btn-model btn-model-primary" style="margin-bottom:8px">Configurar →</a><a href="https://wa.me/5491126972862?text=Hola%2C%20me%20interesa%20la%20Trinidad%20Basic" target="_blank" class="btn-model btn-model-ghost">Cotizar directo</a>
       </div>
     </div>
 
@@ -310,7 +311,7 @@ footer a:hover{color:var(--fg)}
       <div class="model-price-wrap">
         <div class="model-price-from">Desde</div>
         <div class="model-price">$920.000 <span>ARS</span></div>
-        <a href="https://wa.me/5491126972862?text=Hola%2C%20me%20interesa%20la%20Trinidad%20School" target="_blank" class="btn-model btn-model-ghost">Cotizar</a>
+        <a href="configurador.html?model=School" class="btn-model btn-model-primary" style="margin-bottom:8px">Configurar →</a><a href="https://wa.me/5491126972862?text=Hola%2C%20me%20interesa%20la%20Trinidad%20School" target="_blank" class="btn-model btn-model-ghost">Cotizar directo</a>
       </div>
     </div>
 
@@ -338,7 +339,7 @@ footer a:hover{color:var(--fg)}
       <div class="model-price-wrap">
         <div class="model-price-from">Desde</div>
         <div class="model-price">$1.250.000 <span>ARS</span></div>
-        <a href="https://wa.me/5491126972862?text=Hola%2C%20me%20interesa%20la%20Trinidad%20Compaq" target="_blank" class="btn-model btn-model-ghost">Cotizar</a>
+        <a href="configurador.html?model=Compaq" class="btn-model btn-model-primary" style="margin-bottom:8px">Configurar →</a><a href="https://wa.me/5491126972862?text=Hola%2C%20me%20interesa%20la%20Trinidad%20Compaq" target="_blank" class="btn-model btn-model-ghost">Cotizar directo</a>
       </div>
     </div>
 
@@ -366,7 +367,7 @@ footer a:hover{color:var(--fg)}
       <div class="model-price-wrap">
         <div class="model-price-from">Desde</div>
         <div class="model-price">$2.100.000 <span>ARS</span></div>
-        <a href="https://wa.me/5491126972862?text=Hola%2C%20me%20interesa%20la%20Trinidad%20Hollow" target="_blank" class="btn-model btn-model-primary">Cotizar</a>
+        <a href="configurador.html?model=Hollow" class="btn-model btn-model-primary" style="margin-bottom:8px">Configurar →</a><a href="https://wa.me/5491126972862?text=Hola%2C%20me%20interesa%20la%20Trinidad%20Hollow" target="_blank" class="btn-model btn-model-ghost">Cotizar directo</a>
       </div>
     </div>
 
@@ -443,7 +444,7 @@ footer a:hover{color:var(--fg)}
   <h2 class="reveal" style="transition-delay:0.1s">Tu Trinidad te <em>espera</em>.</h2>
   <p class="reveal" style="transition-delay:0.2s">Contanos qué necesitás y te armamos una cotización en menos de 24 horas. Envío a todo el país. Garantía y soporte post-venta incluidos.</p>
   <div class="cta-actions reveal" style="transition-delay:0.3s">
-    <a href="https://wa.me/5491126972862?text=Hola%2C%20quiero%20cotizar%20una%20PC%20de%20la%20l%C3%ADnea%20Trinidad" target="_blank" class="btn-primary">Cotizar por WhatsApp</a>
+    <a href="configurador.html" class="btn-primary">Configurá tu PC →</a>
     <a href="index.html#contacto" class="btn-ghost">Formulario de contacto</a>
   </div>
 </section>
@@ -466,6 +467,14 @@ const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const model = params.get('model');
+  if(model){
+    sessionStorage.setItem('trinidadModel', model);
+  }
 </script>
 </body>
 </html>

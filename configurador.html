@@ -595,6 +595,19 @@ function resetConfig(){
 updatePreview();
 updateSummary();
 updateWa();
+
+  // Auto-select model from URL param or sessionStorage
+  (function(){
+    const params = new URLSearchParams(window.location.search);
+    const stored = sessionStorage.getItem('trinidadModel');
+    const model  = params.get('model') || stored;
+    if(model){
+      const tab = document.querySelector(`.model-tab[data-model="${model}"]`);
+      if(tab){ selectModel(tab); }
+      sessionStorage.removeItem('trinidadModel');
+    }
+  })();
+
 </script>
 </body>
 </html>
