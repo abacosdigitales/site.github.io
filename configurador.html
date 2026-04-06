@@ -437,10 +437,8 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div style="text-align:center">
       <div style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem">Tu configuración</div>
       <!-- PC Preview -->
-      <div id="pcPreview" style="width:56px;height:76px;border-radius:8px;margin:0 auto 1rem;background:#1e1e1e;border:1px solid rgba(255,255,255,0.08);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transition:all 0.4s">
-        <div id="previewLed" style="width:6px;height:6px;border-radius:50%;background:#555;position:absolute;top:8px;right:9px;transition:all 0.4s"></div>
-        <div id="previewStripe" style="width:65%;height:2px;border-radius:1px;opacity:0.2;background:#fff;transition:all 0.4s"></div>
-        <div style="width:45%;height:2px;border-radius:1px;opacity:0.1;background:#fff"></div>
+      <div style="width:100%;margin:0 auto 1rem;border-radius:10px;overflow:hidden;aspect-ratio:16/9">
+        <img id="pcPreview" src="Basic.png" alt="Trinidad Basic" style="width:100%;height:100%;object-fit:cover;transition:opacity 0.3s ease"/>
       </div>
       <div class="summary-title" id="summaryModel">Basic</div>
       <div class="summary-model" id="summaryPlatform">AM4 · Serie 5000</div>
@@ -481,10 +479,10 @@ const state = {
 };
 
 const modelStyles = {
-  Basic:  { bg:'#1e1e1e', border:'rgba(255,255,255,0.08)', led:'#555', stripe:'#fff', shadow:'' },
-  School: { bg:'#111d2e', border:'rgba(55,138,221,0.25)',  led:'#3B8BD4', stripe:'#3B8BD4', shadow:'0 0 8px #3B8BD4' },
-  Compaq: { bg:'#1a1108', border:'rgba(186,117,23,0.25)',  led:'#F0A830', stripe:'#F0A830', shadow:'0 0 8px #F0A830' },
-  Hollow: { bg:'#120808', border:'rgba(232,38,26,0.4)',    led:'#E8261A', stripe:'#E8261A', shadow:'0 0 10px #E8261A' }
+  Basic:  { img:'Basic.png' },
+  School: { img:'School.png' },
+  Compaq: { img:'Compaq.png' },
+  Hollow: { img:'Hollow.png' }
 };
 
 const cpuDefaults = {
@@ -523,13 +521,12 @@ function selectOption(el){
 function updatePreview(){
   const s = modelStyles[state.model];
   const p = document.getElementById('pcPreview');
-  const l = document.getElementById('previewLed');
-  const st = document.getElementById('previewStripe');
-  p.style.background = s.bg;
-  p.style.border = `1.5px solid ${s.border}`;
-  l.style.background = s.led;
-  l.style.boxShadow = s.shadow;
-  st.style.background = s.stripe;
+  p.style.opacity = '0';
+  setTimeout(() => {
+    p.src = s.img;
+    p.alt = 'Trinidad ' + state.model;
+    p.style.opacity = '1';
+  }, 150);
   document.getElementById('summaryModel').textContent = state.model;
   document.getElementById('summaryPlatform').textContent = state.platform;
 }
