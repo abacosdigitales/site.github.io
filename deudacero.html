@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeudaCero — Tu camino a la libertad financiera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d0f14;--surface:#161923;--card:#1e2330;--border:#2a3045;
+    --accent:#f5a623;--accent2:#4ade80;--accent3:#60a5fa;--accent4:#f472b6;
+    --text:#e8eaf0;--muted:#8892a4;--danger:#f87171;
+    --font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+  }
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;font-size:15px}
+  h1,h2,h3{font-family:var(--font-head)}
+
+  .app{max-width:860px;margin:0 auto;padding:1.5rem 1rem 4rem}
+
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem}
+  .logo{font-family:var(--font-head);font-size:1.5rem;font-weight:800;color:var(--accent)}
+  .logo span{color:var(--text)}
+  .xp-bar-wrap{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+  .xp-bar{width:120px;height:8px;background:var(--border);border-radius:99px;overflow:hidden}
+  .xp-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent4));border-radius:99px;transition:width .5s}
+  .level-badge{background:var(--accent);color:#000;font-family:var(--font-head);font-weight:700;font-size:12px;padding:3px 10px;border-radius:99px}
+
+  .tabs{display:flex;gap:6px;margin-bottom:1.5rem;overflow-x:auto;scrollbar-width:none}
+  .tab{padding:8px 18px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:var(--font-body);font-size:14px;font-weight:500;white-space:nowrap;transition:.2s}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700}
+
+  .view{display:none}.view.active{display:block}
+
+  .card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:1.25rem}
+  .card+.card{margin-top:1rem}
+  .card-title{font-family:var(--font-head);font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--text)}
+
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
+  .stat-card{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:1rem;text-align:center}
+  .stat-val{font-family:var(--font-head);font-size:1.4rem;font-weight:800;color:var(--accent)}
+  .stat-label{font-size:12px;color:var(--muted);margin-top:4px}
+
+  .form-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:10px}
+  .form-group{display:flex;flex-direction:column;gap:4px}
+  .form-group label{font-size:12px;color:var(--muted)}
+  .form-group input,.form-group select{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-family:var(--font-body);font-size:14px;outline:none;transition:.2s}
+  .form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+  .btn{padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-family:var(--font-head);font-weight:700;font-size:13px;transition:.2s}
+  .btn-add{background:var(--accent);color:#000}
+  .btn-add:hover{opacity:.85}
+  .btn-sm{padding:5px 12px;font-size:12px;border-radius:6px;background:transparent;border:1.5px solid var(--border);color:var(--muted);cursor:pointer;font-family:var(--font-body)}
+  .btn-danger{border-color:var(--danger);color:var(--danger)}
+
+  .debt-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+  .debt-item:last-child{border-bottom:none}
+  .debt-rank{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-weight:800;font-size:13px;flex-shrink:0}
+  .debt-info{flex:1}
+  .debt-name{font-weight:500;font-size:14px}
+  .debt-meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .debt-progress{height:5px;background:var(--border);border-radius:99px;margin-top:5px;overflow:hidden}
+  .debt-progress-fill{height:100%;border-radius:99px;transition:width .5s}
+  .attack-badge{font-size:10px;padding:2px 8px;border-radius:99px;font-weight:700;background:rgba(245,166,35,.15);color:var(--accent);margin-left:6px}
+
+  .chart-wrap{position:relative;height:240px;margin:1rem 0}
+
+  .method-toggle{display:flex;gap:8px;margin-bottom:1.25rem}
+  .method-btn{flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:var(--font-head);font-weight:700;font-size:14px;transition:.2s;text-align:center}
+  .method-btn.active.snowball{border-color:#60a5fa;color:#60a5fa;background:rgba(96,165,250,.08)}
+  .method-btn.active.avalanche{border-color:#f472b6;color:#f472b6;background:rgba(244,114,182,.08)}
+  .method-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:1rem}
+
+  .comp-table{width:100%;border-collapse:collapse;font-size:13px}
+  .comp-table th{padding:8px 12px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)}
+  .comp-table td{padding:10px 12px;border-bottom:1px solid var(--border)}
+  .comp-table tr:last-child td{border-bottom:none}
+  .comp-winner{color:var(--accent2);font-weight:700}
+
+  .badges-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .badge-item{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;transition:.3s}
+  .badge-item.unlocked{border-color:var(--accent);background:rgba(245,166,35,.06)}
+  .badge-icon{font-size:1.8rem;margin-bottom:6px}
+  .badge-name{font-family:var(--font-head);font-size:12px;font-weight:700;color:var(--text)}
+  .badge-desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
+  .badge-locked{opacity:.35;filter:grayscale(1)}
+
+  .timeline{position:relative;padding-left:24px}
+  .timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
+  .tl-item{position:relative;margin-bottom:1.25rem}
+  .tl-dot{width:16px;height:16px;border-radius:50%;background:var(--border);border:2px solid var(--surface);position:absolute;left:-24px;top:2px}
+  .tl-dot.done{background:var(--accent2)}
+  .tl-dot.current{background:var(--accent);box-shadow:0 0 0 4px rgba(245,166,35,.2)}
+  .tl-label{font-size:14px;font-weight:500}
+  .tl-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+  .motivation-bar{background:linear-gradient(135deg,rgba(245,166,35,.1),rgba(96,165,250,.1));border:1.5px solid rgba(245,166,35,.2);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px}
+  .motivation-icon{font-size:1.5rem;flex-shrink:0}
+  .motivation-text{font-size:14px;color:var(--text);line-height:1.5}
+
+  .celebration{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100;background:var(--card);border:2px solid var(--accent);border-radius:20px;padding:2rem;text-align:center;max-width:320px;width:90%}
+  .celebration.show{display:block;animation:popIn .4s ease}
+  @keyframes popIn{from{transform:translate(-50%,-50%) scale(.7);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+  .cel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99}
+  .cel-overlay.show{display:block}
+  .confetti-row{display:flex;justify-content:center;gap:6px;font-size:1.2rem;margin-bottom:.75rem}
+
+  .extra-wrap{display:flex;align-items:center;gap:10px;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)}
+  .extra-wrap label{font-size:13px;color:var(--muted);white-space:nowrap}
+  .extra-wrap input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;color:var(--text);padding:7px 10px;font-size:14px;font-family:var(--font-body);outline:none}
+  .extra-wrap input:focus{border-color:var(--accent)}
+
+  .empty-state{text-align:center;padding:2.5rem;color:var(--muted);font-size:14px}
+  .empty-icon{font-size:2.5rem;margin-bottom:.75rem}
+
+  @media(max-width:600px){
+    .form-row{grid-template-columns:1fr 1fr}.form-row .btn-add{grid-column:1/-1}
+    .stats-row{grid-template-columns:1fr 1fr}.stats-row .stat-card:last-child{grid-column:1/-1}
+    .badges-grid{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <div class="logo">Deuda<span>Cero</span></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="level-badge" id="levelBadge">Nivel 1</div>
+      <div class="xp-bar-wrap">
+        <span id="xpLabel">0 XP</span>
+        <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="motivation-bar" id="motivationBar">
+    <div class="motivation-icon">🔥</div>
+    <div class="motivation-text" id="motivationText">Cargá tus deudas y empezá hoy. Cada peso pagado es un paso hacia tu libertad financiera.</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('dashboard')">Panel</button>
+    <button class="tab" onclick="switchTab('debts')">Mis Deudas</button>
+    <button class="tab" onclick="switchTab('plan')">Plan de Pago</button>
+    <button class="tab" onclick="switchTab('compare')">Comparar Métodos</button>
+    <button class="tab" onclick="switchTab('logros')">Logros</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="view active" id="view-dashboard">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-val" id="statTotal">$0</div>
+        <div class="stat-label">Deuda total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--accent2)" id="statPaid">$0</div>
+        <div class="stat-label">Ya pagado</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--accent3)" id="statDebts">0</div>
+        <div class="stat-label">Deudas activas</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Progreso general</div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px">
+        <span id="progressLabel">0% eliminado</span>
+        <span id="progressRemain">$0 restante</span>
+      </div>
+      <div style="height:14px;background:var(--border);border-radius:99px;overflow:hidden">
+        <div id="mainProgress" style="height:100%;width:0%;background:linear-gradient(90deg,#4ade80,#f5a623);border-radius:99px;transition:width .6s ease"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1rem">
+      <div class="card-title">Próximo objetivo</div>
+      <div id="nextTarget"><div class="empty-state"><div class="empty-icon">🎯</div>Agregá tus deudas para ver tu próximo objetivo</div></div>
+    </div>
+
+    <div class="card" style="margin-top:1rem">
+      <div class="card-title">Proyección de libertad</div>
+      <div class="chart-wrap"><canvas id="progressChart" role="img" aria-label="Gráfico de proyección de deuda en el tiempo">Proyección de pago de deudas</canvas></div>
+    </div>
+  </div>
+
+  <!-- MIS DEUDAS -->
+  <div class="view" id="view-debts">
+    <div class="card">
+      <div class="card-title">Agregar deuda</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre</label>
+          <input type="text" id="debtName" placeholder="Ej: Tarjeta Visa">
+        </div>
+        <div class="form-group">
+          <label>Saldo ($)</label>
+          <input type="number" id="debtBalance" placeholder="50000" min="0">
+        </div>
+        <div class="form-group">
+          <label>Interés anual (%)</label>
+          <input type="number" id="debtRate" placeholder="45" min="0">
+        </div>
+        <button class="btn btn-add" onclick="addDebt()">+</button>
+      </div>
+      <div class="form-row" style="grid-template-columns:1fr 1fr;margin-top:0">
+        <div class="form-group">
+          <label>Pago mínimo ($)</label>
+          <input type="number" id="debtMin" placeholder="2000" min="0">
+        </div>
+        <div class="form-group">
+          <label>Ya pagado ($)</label>
+          <input type="number" id="debtPaid" placeholder="0" min="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1rem">
+      <div class="card-title">Mis deudas</div>
+      <div id="debtList"><div class="empty-state"><div class="empty-icon">📋</div>Todavía no cargaste ninguna deuda</div></div>
+    </div>
+  </div>
+
+  <!-- PLAN DE PAGO -->
+  <div class="view" id="view-plan">
+    <div class="method-toggle">
+      <button class="method-btn active snowball" id="btnSnowball" onclick="setMethod('snowball')">❄️ Bola de Nieve</button>
+      <button class="method-btn avalanche" id="btnAvalanche" onclick="setMethod('avalanche')">🌊 Avalancha</button>
+    </div>
+    <div class="method-desc" id="methodDesc">
+      <strong style="color:var(--accent3)">Bola de nieve:</strong> Atacás primero la deuda más pequeña. Cada deuda que eliminás te da momentum y motivación para seguir.
+    </div>
+    <div class="extra-wrap">
+      <label>Pago extra mensual ($)</label>
+      <input type="number" id="extraPayment" value="0" min="0" oninput="renderPlan()">
+    </div>
+    <div class="card" style="margin-top:1rem">
+      <div class="card-title">Orden de ataque</div>
+      <div id="planList"><div class="empty-state"><div class="empty-icon">⚔️</div>Cargá tus deudas para ver el plan</div></div>
+    </div>
+    <div class="card" style="margin-top:1rem">
+      <div class="card-title">Línea de tiempo de liberación</div>
+      <div id="timeline"><div class="empty-state">Calculando...</div></div>
+    </div>
+  </div>
+
+  <!-- COMPARAR MÉTODOS -->
+  <div class="view" id="view-compare">
+    <div class="card">
+      <div class="card-title">Bola de Nieve vs Avalancha</div>
+      <div id="compareContent"><div class="empty-state"><div class="empty-icon">⚖️</div>Cargá deudas para ver la comparación</div></div>
+    </div>
+    <div class="card" style="margin-top:1rem">
+      <div class="card-title">Intereses totales pagados</div>
+      <div class="chart-wrap"><canvas id="compareChart" role="img" aria-label="Comparación de intereses entre bola de nieve y avalancha">Comparación de métodos</canvas></div>
+    </div>
+  </div>
+
+  <!-- LOGROS -->
+  <div class="view" id="view-logros">
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">Tu progreso</div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="text-align:center">
+          <div style="font-family:var(--font-head);font-size:2.5rem;font-weight:800;color:var(--accent)" id="logroXP">0</div>
+          <div style="font-size:12px;color:var(--muted)">XP Total</div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:6px" id="logroLevel">Nivel 1 — Aprendiz Financiero</div>
+          <div style="height:10px;background:var(--border);border-radius:99px;overflow:hidden">
+            <div id="logroXpBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent4));border-radius:99px;transition:width .5s"></div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px" id="logroXpNext">0 XP para el siguiente nivel</div>
+        </div>
+      </div>
+    </div>
+    <div class="badges-grid" id="badgesGrid"></div>
+  </div>
+
+</div>
+
+<!-- CELEBRATION -->
+<div class="cel-overlay" id="celOverlay" onclick="closeCelebration()"></div>
+<div class="celebration" id="celebration">
+  <div class="confetti-row" id="celConfetti">🎉🏆🎊⭐🥳</div>
+  <div style="font-family:var(--font-head);font-size:1.4rem;font-weight:800;color:var(--accent);margin-bottom:.5rem" id="celTitle">¡Logro desbloqueado!</div>
+  <div style="font-size:14px;color:var(--muted)" id="celDesc">Descripción</div>
+  <div style="margin-top:.75rem;font-size:13px;color:var(--accent2)" id="celXP">+50 XP</div>
+  <button class="btn btn-add" style="margin-top:1rem;width:100%" onclick="closeCelebration()">¡A seguir!</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const STORAGE_KEY = 'deudacero_v1';
+let state = { debts:[], xp:0, method:'snowball', unlockedBadges:[] };
+
+const BADGES = [
+  {id:'primer_paso',icon:'🚀',name:'Primer Paso',desc:'Cargá tu primera deuda',xp:50,check:s=>s.debts.length>=1},
+  {id:'tres_deudas',icon:'📋',name:'Estratega',desc:'Cargá 3 o más deudas',xp:80,check:s=>s.debts.length>=3},
+  {id:'primer_pago',icon:'💳',name:'El Inicio',desc:'Registrá tu primer pago',xp:100,check:s=>s.debts.some(d=>d.paid>0)},
+  {id:'mitad_camino',icon:'⚡',name:'A Mitad',desc:'Eliminá el 50% de una deuda',xp:150,check:s=>s.debts.some(d=>d.originalBalance&&d.paid/d.originalBalance>=.5)},
+  {id:'primera_deuda_libre',icon:'🏆',name:'Primera Libre',desc:'Eliminá tu primera deuda completamente',xp:300,check:s=>s.debts.some(d=>d.paid>0&&d.originalBalance&&d.paid>=d.originalBalance)},
+  {id:'cinco_deudas',icon:'💎',name:'Veterano',desc:'Cargá 5 o más deudas',xp:120,check:s=>s.debts.length>=5},
+  {id:'explorador',icon:'🔍',name:'Explorador',desc:'Comparaste ambos métodos',xp:60,check:s=>s._explorador},
+  {id:'libre',icon:'🦅',name:'Libertad',desc:'Eliminá todas tus deudas',xp:1000,check:s=>s.debts.length>0&&s.debts.every(d=>d.originalBalance&&d.paid>=d.originalBalance)},
+];
+
+const LEVELS = [
+  {min:0,name:'Aprendiz Financiero'},{min:200,name:'Ahorrador'},
+  {min:500,name:'Pagador Disciplinado'},{min:900,name:'Estratega del Dinero'},
+  {min:1400,name:'Cazador de Deudas'},{min:2000,name:'Mente Libre'}
+];
+
+const MOTIVATIONS = [
+  "Cada peso que pagás hoy es libertad que comprás para mañana. 💪",
+  "No es lo que ganás, es lo que dejás de deber. Seguí.",
+  "La deuda más cara es la que nunca atacás. Hoy es el día.",
+  "El camino a la libertad financiera empieza con un solo pago.",
+  "Cada deuda eliminada es una cadena que te sacás de encima. 🔑",
+  "Tu yo futuro te va a agradecer lo que hacés hoy.",
+  "No apagues el incendio más grande, apagá el más chico primero.",
+];
+
+function loadState(){
+  try{const s=localStorage.getItem(STORAGE_KEY);if(s)state={...state,...JSON.parse(s)}}catch(e){}
+}
+function saveState(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}catch(e){}
+}
+
+function getLevel(){
+  let lv=0;
+  for(let i=0;i<LEVELS.length;i++){if(state.xp>=LEVELS[i].min)lv=i;}
+  return {num:lv+1,...LEVELS[lv],next:LEVELS[lv+1]||null};
+}
+
+function updateXPUI(){
+  const lv=getLevel();
+  const nextMin=lv.next?lv.next.min:state.xp+1;
+  const prevMin=LEVELS[lv.num-1]?LEVELS[lv.num-1].min:0;
+  const pct=Math.min(100,Math.round((state.xp-prevMin)/(nextMin-prevMin)*100))||0;
+  document.getElementById('xpLabel').textContent=state.xp+' XP';
+  document.getElementById('xpFill').style.width=pct+'%';
+  document.getElementById('levelBadge').textContent='Nivel '+lv.num;
+  document.getElementById('logroXP').textContent=state.xp;
+  document.getElementById('logroLevel').textContent='Nivel '+lv.num+' — '+lv.name;
+  document.getElementById('logroXpBar').style.width=pct+'%';
+  document.getElementById('logroXpNext').textContent=lv.next?((lv.next.min-state.xp)+' XP para el siguiente nivel'):'Nivel máximo alcanzado 🎖️';
+}
+
+function checkBadges(){
+  let newBadge=false;
+  BADGES.forEach(b=>{
+    if(!state.unlockedBadges.includes(b.id)&&b.check(state)){
+      state.unlockedBadges.push(b.id);
+      state.xp+=b.xp;
+      showCelebration(b.icon,b.name,b.desc,b.xp);
+      newBadge=true;
+    }
+  });
+  if(newBadge){saveState();updateXPUI();}
+  renderBadges();
+}
+
+function showCelebration(icon,title,desc,xp){
+  document.getElementById('celConfetti').textContent=icon+'🎉✨⭐'+icon;
+  document.getElementById('celTitle').textContent=title;
+  document.getElementById('celDesc').textContent=desc;
+  document.getElementById('celXP').textContent='+'+xp+' XP';
+  document.getElementById('celebration').classList.add('show');
+  document.getElementById('celOverlay').classList.add('show');
+}
+
+function closeCelebration(){
+  document.getElementById('celebration').classList.remove('show');
+  document.getElementById('celOverlay').classList.remove('show');
+}
+
+function renderBadges(){
+  const grid=document.getElementById('badgesGrid');
+  grid.innerHTML=BADGES.map(b=>{
+    const unlocked=state.unlockedBadges.includes(b.id);
+    return `<div class="badge-item ${unlocked?'unlocked':'badge-locked'}">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+      <div class="badge-desc">${b.desc}</div>
+      <div style="font-size:11px;color:var(--accent);margin-top:4px;font-weight:700">${unlocked?'+'+b.xp+' XP obtenidos':'?? XP bloqueado'}</div>
+    </div>`;
+  }).join('');
+}
+
+function addDebt(){
+  const name=document.getElementById('debtName').value.trim();
+  const balance=parseFloat(document.getElementById('debtBalance').value)||0;
+  const rate=parseFloat(document.getElementById('debtRate').value)||0;
+  const min=parseFloat(document.getElementById('debtMin').value)||0;
+  const paid=parseFloat(document.getElementById('debtPaid').value)||0;
+  if(!name||balance<=0){alert('Completá al menos nombre y saldo.');return;}
+  const debt={id:Date.now(),name,balance:Math.max(0,balance-paid),originalBalance:balance,rate,min,paid};
+  state.debts.push(debt);
+  saveState();
+  ['debtName','debtBalance','debtRate','debtMin','debtPaid'].forEach(id=>document.getElementById(id).value='');
+  renderAll();
+  checkBadges();
+}
+
+function deleteDebt(id){
+  state.debts=state.debts.filter(d=>d.id!==id);
+  saveState();renderAll();
+}
+
+function registerPayment(id){
+  const amount=parseFloat(prompt('¿Cuánto pagaste? ($)'))||0;
+  if(amount<=0)return;
+  const d=state.debts.find(d=>d.id===id);
+  if(!d)return;
+  d.paid=(d.paid||0)+amount;
+  d.balance=Math.max(0,(d.originalBalance||d.balance)-d.paid);
+  saveState();renderAll();checkBadges();
+  updateMotivation();
+}
+
+function updateMotivation(){
+  const idx=Math.floor(Math.random()*MOTIVATIONS.length);
+  document.getElementById('motivationText').textContent=MOTIVATIONS[idx];
+}
+
+function formatMoney(n){return '$'+Math.round(n).toLocaleString('es-AR')}
+
+function getOrderedDebts(method){
+  const active=state.debts.filter(d=>d.balance>0);
+  if(method==='snowball')return [...active].sort((a,b)=>a.balance-b.balance);
+  return [...active].sort((a,b)=>b.rate-a.rate);
+}
+
+function simulatePlan(debts,extra){
+  if(!debts.length)return{months:0,totalInterest:0,freed:[]};
+  let balances=debts.map(d=>({...d,bal:d.balance}));
+  let months=0,totalInterest=0,freed=[];
+  const maxMonths=360;
+  while(balances.some(d=>d.bal>0)&&months<maxMonths){
+    months++;
+    let freeExtra=extra;
+    balances.forEach((d,i)=>{
+      if(d.bal<=0)return;
+      const monthlyRate=d.rate/100/12;
+      const interest=d.bal*monthlyRate;
+      totalInterest+=interest;
+      d.bal+=interest;
+      d.bal-=d.min;
+      if(i===0){d.bal-=freeExtra;freeExtra=0;}
+      if(d.bal<=0){freed.push({name:d.name,month:months});d.bal=0;}
+    });
+    if(balances[0]&&balances[0].bal<=0){
+      const freed_min=balances[0].min;
+      balances=balances.filter(d=>d.bal>0);
+      if(balances.length)balances[0].min+=freed_min;
+    }
+  }
+  return{months,totalInterest,freed};
+}
+
+function renderAll(){
+  renderDashboard();
+  renderDebtList();
+  renderPlan();
+  renderCompare();
+}
+
+let progressChartInst=null;
+function renderDashboard(){
+  const debts=state.debts;
+  const totalOriginal=debts.reduce((s,d)=>s+(d.originalBalance||d.balance),0);
+  const totalPaid=debts.reduce((s,d)=>s+(d.paid||0),0);
+  const totalRemain=debts.reduce((s,d)=>s+d.balance,0);
+  const pct=totalOriginal>0?Math.round(totalPaid/totalOriginal*100):0;
+
+  document.getElementById('statTotal').textContent=formatMoney(totalOriginal);
+  document.getElementById('statPaid').textContent=formatMoney(totalPaid);
+  document.getElementById('statDebts').textContent=debts.filter(d=>d.balance>0).length;
+  document.getElementById('progressLabel').textContent=pct+'% eliminado';
+  document.getElementById('progressRemain').textContent=formatMoney(totalRemain)+' restante';
+  document.getElementById('mainProgress').style.width=pct+'%';
+
+  const ordered=getOrderedDebts(state.method);
+  const next=ordered[0];
+  const nextEl=document.getElementById('nextTarget');
+  if(next){
+    const p=next.originalBalance?Math.round((next.paid||0)/next.originalBalance*100):0;
+    nextEl.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div><div style="font-weight:500">${next.name}</div><div style="font-size:12px;color:var(--muted)">${formatMoney(next.balance)} restante · ${next.rate}% anual</div></div>
+      <div style="font-family:var(--font-head);font-weight:800;color:var(--accent)">${p}%</div>
+    </div>
+    <div style="height:10px;background:var(--border);border-radius:99px;overflow:hidden">
+      <div style="height:100%;width:${p}%;background:linear-gradient(90deg,#4ade80,#f5a623);border-radius:99px;transition:width .5s"></div>
+    </div>
+    <button class="btn btn-sm" style="margin-top:10px" onclick="registerPayment(${next.id})">💳 Registrar pago</button>`;
+  } else {
+    nextEl.innerHTML='<div class="empty-state"><div class="empty-icon">🎯</div>Agregá tus deudas para ver tu próximo objetivo</div>';
+  }
+
+  const ctx=document.getElementById('progressChart').getContext('2d');
+  if(progressChartInst)progressChartInst.destroy();
+  const extra=parseFloat(document.getElementById('extraPayment')?.value)||0;
+  const simMonths=Math.min(84,Math.max(12,simulatePlan(getOrderedDebts(state.method),extra).months||12));
+  const labels=[],dataVals=[];
+  let running=totalRemain;
+  for(let m=0;m<=simMonths;m++){
+    labels.push(m===0?'Hoy':`M${m}`);
+    dataVals.push(Math.max(0,Math.round(running)));
+    running*=0.97;if(running<1)running=0;
+  }
+  progressChartInst=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[{label:'Deuda restante',data:dataVals,borderColor:'#f5a623',backgroundColor:'rgba(245,166,35,.08)',tension:.4,fill:true,pointRadius:0,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8892a4',font:{size:11},maxTicksLimit:7},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#8892a4',font:{size:11},callback:v=>formatMoney(v)},grid:{color:'rgba(255,255,255,.04)'}}}}
+  });
+}
+
+function renderDebtList(){
+  const el=document.getElementById('debtList');
+  if(!state.debts.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div>Todavía no cargaste ninguna deuda</div>';return;}
+  const colors=['var(--accent)','var(--accent3)','var(--accent4)','var(--accent2)'];
+  el.innerHTML=state.debts.map((d,i)=>{
+    const orig=d.originalBalance||d.balance;
+    const pct=orig>0?Math.round((d.paid||0)/orig*100):0;
+    const color=colors[i%colors.length];
+    return `<div class="debt-item">
+      <div class="debt-rank" style="background:${color}20;color:${color}">${i+1}</div>
+      <div class="debt-info">
+        <div class="debt-name">${d.name} ${d.balance<=0?'<span style="font-size:11px;background:rgba(74,222,128,.15);color:#4ade80;padding:2px 8px;border-radius:99px;font-weight:700">PAGADA ✓</span>':''}</div>
+        <div class="debt-meta">Saldo: ${formatMoney(d.balance)} · ${d.rate}% · Mín: ${formatMoney(d.min)}</div>
+        <div class="debt-progress"><div class="debt-progress-fill" style="width:${pct}%;background:${color}"></div></div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:var(--font-head);font-weight:700;color:${color}">${formatMoney(d.balance)}</div>
+        <div style="font-size:11px;color:var(--muted)">${pct}% pago</div>
+        <div style="display:flex;gap:4px;margin-top:4px;justify-content:flex-end">
+          <button class="btn btn-sm" onclick="registerPayment(${d.id})">💳</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteDebt(${d.id})">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setMethod(m){
+  state.method=m;
+  saveState();
+  document.getElementById('btnSnowball').className='method-btn'+(m==='snowball'?' active snowball':'');
+  document.getElementById('btnAvalanche').className='method-btn'+(m==='avalanche'?' active avalanche':'');
+  const desc=m==='snowball'
+    ?'<strong style="color:var(--accent3)">Bola de nieve:</strong> Atacás primero la deuda más pequeña. Cada deuda que eliminás te da momentum y motivación para seguir.'
+    :'<strong style="color:var(--accent4)">Avalancha:</strong> Atacás primero la deuda con mayor tasa de interés. Matemáticamente óptimo — pagás menos intereses en total.';
+  document.getElementById('methodDesc').innerHTML=desc;
+  renderPlan();
+}
+
+function renderPlan(){
+  const extra=parseFloat(document.getElementById('extraPayment')?.value)||0;
+  const ordered=getOrderedDebts(state.method);
+  const planEl=document.getElementById('planList');
+  const tlEl=document.getElementById('timeline');
+  if(!ordered.length){
+    planEl.innerHTML='<div class="empty-state"><div class="empty-icon">⚔️</div>Cargá tus deudas para ver el plan</div>';
+    tlEl.innerHTML='';return;
+  }
+  planEl.innerHTML=ordered.map((d,i)=>{
+    const highlight=i===0;
+    const color=state.method==='snowball'?'var(--accent3)':'var(--accent4)';
+    return `<div class="debt-item" style="${highlight?'background:rgba(96,165,250,.04);border-radius:8px;padding:10px':''}">
+      <div class="debt-rank" style="background:${highlight?color+'22':'var(--border)'};color:${highlight?color:'var(--muted)'}">${i+1}</div>
+      <div class="debt-info">
+        <div class="debt-name">${d.name}${highlight?`<span class="attack-badge">ATACAR AHORA</span>`:''}</div>
+        <div class="debt-meta">${state.method==='snowball'?'Saldo: '+formatMoney(d.balance):'Interés: '+d.rate+'% anual'} · Pago mín: ${formatMoney(d.min)}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:var(--font-head);font-weight:700;color:${highlight?color:'var(--muted)'}">${formatMoney(d.balance)}</div>
+        ${highlight?`<div style="font-size:11px;color:${color};margin-top:2px">Pago: ${formatMoney(d.min+extra)}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const sim=simulatePlan(ordered,extra);
+  const now=new Date();
+  tlEl.innerHTML='<div class="timeline">'+ordered.map((d,i)=>{
+    const freed=sim.freed.find(f=>f.name===d.name);
+    const m=freed?freed.month:(i+1)*Math.ceil(sim.months/ordered.length);
+    const date=new Date(now.getFullYear(),now.getMonth()+m);
+    const label=date.toLocaleDateString('es-AR',{month:'long',year:'numeric'});
+    return `<div class="tl-item">
+      <div class="tl-dot ${i===0?'current':''}"></div>
+      <div class="tl-label">${d.name}</div>
+      <div class="tl-sub">~${label} · ${formatMoney(d.balance)} eliminados</div>
+    </div>`;
+  }).join('')+`<div class="tl-item"><div class="tl-dot" style="background:var(--accent2)"></div>
+    <div class="tl-label" style="color:var(--accent2)">¡LIBERTAD FINANCIERA!</div>
+    <div class="tl-sub">~${sim.months} meses · Total intereses: ${formatMoney(sim.totalInterest)}</div>
+  </div></div>`;
+}
+
+let compareChartInst=null;
+function renderCompare(){
+  const debtsS=getOrderedDebts('snowball');
+  const debtsA=getOrderedDebts('avalanche');
+  const compEl=document.getElementById('compareContent');
+  if(!debtsS.length){compEl.innerHTML='<div class="empty-state"><div class="empty-icon">⚖️</div>Cargá deudas para ver la comparación</div>';return;}
+  const extra=parseFloat(document.getElementById('extraPayment')?.value)||0;
+  const simS=simulatePlan(debtsS,extra);
+  const simA=simulatePlan(debtsA,extra);
+  const betterInt=simA.totalInterest<simS.totalInterest?'avalanche':'snowball';
+  const betterTime=simA.months<simS.months?'avalanche':'snowball';
+  const saving=Math.abs(simS.totalInterest-simA.totalInterest);
+  const timeDiff=Math.abs(simS.months-simA.months);
+
+  compEl.innerHTML=`<table class="comp-table">
+    <thead><tr><th>Métrica</th><th>❄️ Bola de Nieve</th><th>🌊 Avalancha</th></tr></thead>
+    <tbody>
+      <tr><td>Meses para liberarse</td>
+        <td class="${betterTime==='snowball'?'comp-winner':''}">${simS.months} meses</td>
+        <td class="${betterTime==='avalanche'?'comp-winner':''}">${simA.months} meses</td>
+      </tr>
+      <tr><td>Total en intereses</td>
+        <td class="${betterInt==='snowball'?'comp-winner':''}">${formatMoney(simS.totalInterest)}</td>
+        <td class="${betterInt==='avalanche'?'comp-winner':''}">${formatMoney(simA.totalInterest)}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div style="margin-top:1rem;padding:10px;background:rgba(74,222,128,.08);border-radius:8px;font-size:13px;color:var(--accent2)">
+    💡 La avalancha ahorra ${formatMoney(saving)} en intereses. La bola de nieve es más motivadora porque eliminás deudas antes.
+    ${timeDiff>0?`La diferencia de tiempo es ${timeDiff} ${timeDiff===1?'mes':'meses'}.`:''}
+  </div>`;
+
+  const ctx=document.getElementById('compareChart').getContext('2d');
+  if(compareChartInst)compareChartInst.destroy();
+  compareChartInst=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['Intereses pagados','Meses totales'],
+      datasets:[
+        {label:'Bola de Nieve',data:[Math.round(simS.totalInterest),simS.months],backgroundColor:'rgba(96,165,250,.7)',borderColor:'#60a5fa',borderWidth:1},
+        {label:'Avalancha',data:[Math.round(simA.totalInterest),simA.months],backgroundColor:'rgba(244,114,182,.7)',borderColor:'#f472b6',borderWidth:1}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8892a4',font:{size:12}}}},scales:{x:{ticks:{color:'#8892a4'},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#8892a4'},grid:{color:'rgba(255,255,255,.04)'}}}}
+  });
+}
+
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const tabs=['dashboard','debts','plan','compare','logros'];
+    t.classList.toggle('active',tabs[i]===id);
+  });
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  if(id==='compare'){state._explorador=true;saveState();checkBadges();}
+  if(id==='plan')renderPlan();
+  if(id==='compare')renderCompare();
+}
+
+loadState();
+updateXPUI();
+renderBadges();
+renderAll();
+updateMotivation();
+
+if(state.debts.length===0){
+  setTimeout(()=>{
+    document.getElementById('motivationText').textContent='Consejo: agregá tus deudas reales en la pestaña "Mis Deudas" para empezar tu plan personalizado. ¡La primera deuda en cargarse siempre da 50 XP! 🎯';
+  },1500);
+}
+</script>
+</body>
+</html>
