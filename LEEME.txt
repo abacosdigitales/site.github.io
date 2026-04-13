@@ -1,0 +1,35 @@
+# TechFix Pro — Sistema de Gestión
+
+## Archivos incluidos
+
+- `index.html` → **Sitio web público** (para clientes)
+- `admin.html` → **Panel de administración** (uso interno)
+
+## Cómo usar
+
+1. Abrí `index.html` en el navegador → es el sitio que ven los clientes
+2. Abrí `admin.html` → es tu panel de gestión interno
+
+## Funciones del sitio web (index.html)
+- Página de presentación con servicios, proceso de atención y estadísticas
+- Formulario de solicitud de servicio online
+- Contrato de servicio completo (10 artículos) con opción de aceptar
+- Los datos se guardan automáticamente y aparecen en el panel admin
+
+## Funciones del panel admin (admin.html)
+- Dashboard con métricas en tiempo real
+- Gestión completa de Órdenes de Trabajo (crear, editar, ver, eliminar)
+- Bandeja de solicitudes web recibidas → convertir en OT con un clic
+- Listado automático de clientes con historial
+- Exportar todas las OT a CSV (compatible con Excel)
+
+## Personalización rápida
+- Cambiá "TechFix Pro" por el nombre de tu taller en ambos archivos
+- Modificá los precios en la sección de servicios del index.html
+- Ajustá el contrato con tus datos de contacto y condiciones específicas
+
+## Nota sobre los datos
+Los datos se guardan en el **localStorage del navegador** (almacenamiento local).
+Esto significa que persisten aunque cierres el navegador, pero son específicos
+de ese dispositivo/navegador. Para un sistema multiusuario o con base de datos
+real, se requeriría un backend (servidor).
