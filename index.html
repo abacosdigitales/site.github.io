@@ -339,6 +339,47 @@
     .trinidad-banner-right { align-items:flex-start; }
     .trinidad-banner-pcs { display:none; }
   }
+
+  .techfix-banner {
+    margin: 0 4rem 0;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem 3.5rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2rem;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    transition: border-color 0.3s;
+  }
+  .techfix-banner:hover { border-color: rgba(55,138,221,0.4); }
+  .techfix-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 80% 50%, rgba(55,138,221,0.05) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .techfix-left { position: relative; z-index: 1; }
+  .techfix-eyebrow { font-size:0.7rem; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:#3B8BD4; margin-bottom:0.6rem; }
+  .techfix-title { font-family:var(--serif); font-size:clamp(1.4rem,2.5vw,2rem); line-height:1.15; letter-spacing:-0.02em; color:var(--fg); margin-bottom:0.6rem; }
+  .techfix-title em { font-style:italic; color:#3B8BD4; }
+  .techfix-desc { font-size:0.875rem; color:var(--muted); line-height:1.7; font-weight:300; max-width:520px; margin-bottom:1.25rem; }
+  .techfix-pills { display:flex; gap:0.5rem; flex-wrap:wrap; }
+  .techfix-pill { font-size:0.7rem; font-weight:500; padding:0.28rem 0.8rem; border-radius:100px; border:1px solid rgba(55,138,221,0.2); color:#5BA4EF; background:rgba(55,138,221,0.07); }
+  .techfix-right { position:relative; z-index:1; display:flex; flex-direction:column; align-items:flex-end; gap:1rem; flex-shrink:0; }
+  .techfix-cta { display:inline-flex; align-items:center; gap:0.5rem; font-size:0.875rem; font-weight:500; padding:0.75rem 1.5rem; background:#185FA5; color:#fff; border-radius:100px; white-space:nowrap; transition:opacity 0.2s; }
+  .techfix-banner:hover .techfix-cta { opacity:0.9; }
+  .techfix-stats { display:flex; gap:1.5rem; }
+  .tf-stat-n { font-family:var(--serif); font-size:1.5rem; color:#3B8BD4; display:block; }
+  .tf-stat-l { font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; }
+  @media(max-width:768px){
+    .techfix-banner { grid-template-columns:1fr; margin:0 1.5rem; padding:2rem; }
+    .techfix-right { align-items:flex-start; }
+    .techfix-stats { display:none; }
+  }
 </style>
 </head>
 <body>
@@ -350,6 +391,7 @@
   </a>
   <ul class="nav-links">
     <li><a href="trinidad.html">Trinidad</a></li>
+    <li><a href="https://abacosdigitales.github.io/site.github.io/TECHFIX" target="_blank">TechFix</a></li>
     <li><a href="#servicios">Servicios</a></li>
     <li><a href="#proceso">Proceso</a></li>
     <li><a href="#testimonios">Clientes</a></li>
@@ -431,6 +473,30 @@
     </div>
     <div class="trinidad-banner-cta">Ver modelos →</div>
     <div class="trinidad-banner-sub">Cotización sin compromiso</div>
+  </div>
+</a>
+
+
+
+<a href="https://abacosdigitales.github.io/site.github.io/TECHFIX" target="_blank" class="techfix-banner reveal" style="display:grid;margin-top:1.25rem">
+  <div class="techfix-left">
+    <div class="techfix-eyebrow">Servicio especializado · Reparación IT</div>
+    <div class="techfix-title">TechFix <em>Pro</em> — Tu equipo vuelve a la vida</div>
+    <div class="techfix-desc">Diagnóstico sin cargo, reparación rápida y garantía de 90 días. Notebooks, PCs de escritorio, monitores y periféricos. Solicitá turno online en minutos.</div>
+    <div class="techfix-pills">
+      <span class="techfix-pill">Diagnóstico sin cargo</span>
+      <span class="techfix-pill">Garantía 90 días</span>
+      <span class="techfix-pill">Seguimiento online</span>
+      <span class="techfix-pill">Sin cobro si no hay solución</span>
+    </div>
+  </div>
+  <div class="techfix-right">
+    <div class="techfix-stats">
+      <div><span class="tf-stat-n">500+</span><span class="tf-stat-l">Equipos reparados</span></div>
+      <div><span class="tf-stat-n">48hs</span><span class="tf-stat-l">Tiempo promedio</span></div>
+      <div><span class="tf-stat-n">90d</span><span class="tf-stat-l">Garantía</span></div>
+    </div>
+    <div class="techfix-cta">Solicitar turno →</div>
   </div>
 </a>
 
