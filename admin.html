@@ -389,10 +389,10 @@ let ordenes=JSON.parse(localStorage.getItem('ordenes_tf')||'null')||[
   {id:3,cliente:'Marta Sosa',tel:'11 3341-9988',email:'marta@gmail.com',equipo:'MacBook Air M1',serie:'C02XY1234',fecha:'2026-04-08',problema:'Teclado con teclas que no responden',diag:'',costo:0,estado:'Pendiente',notas:''},
   {id:4,cliente:'Diego Fernández',tel:'11 7823-4455',email:'',equipo:'Monitor Samsung 24"',serie:'',fecha:'2026-04-10',problema:'Parpadea y se apaga',diag:'Condensadores dañados en plano de alimentación',costo:8500,estado:'Listo',notas:'Avisar al cliente'},
 ];
-let nextId=5;
+let nextId=Math.max(...ordenes.map(o=>o.id),0)+1;
 let editingId=null;
 let currentDetId=null;
-function saveOrdenes(){localStorage.setItem('ordenes_tf',JSON.stringify(ordenes))}
+function saveOrdenes(){localStorage.setItem("ordenes_tf",JSON.stringify(ordenes));nextId=Math.max(...ordenes.map(o=>o.id),0)+1;}
 
 // =========== NAV ===========
 const titles={dashboard:'Dashboard',ordenes:'Órdenes de Trabajo',solicitudes:'Solicitudes Web',clientes:'Clientes'};
