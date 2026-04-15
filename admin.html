@@ -781,6 +781,13 @@ function cerrarSesion(){
   setTimeout(()=>document.getElementById('login-pass').focus(),100);
 }
 
+// Exponer TODAS las funciones al scope global (requerido por type="module")
+window.intentarLogin=intentarLogin;
+window.cerrarSesion=cerrarSesion;
+window.abrirNuevaOrden=abrirNuevaOrden;
+window.exportarCSV=exportarCSV;
+window.limpiarSolicitudes=limpiarSolicitudes;
+
 verificarSesion();
 </script>
 </div>
