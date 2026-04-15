@@ -389,19 +389,62 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--blanco)}
   </div>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDIxusiIA-Zl0inSrL2T-7OwvhAIvIu2bY",
+  authDomain: "techfixpro-4338f.firebaseapp.com",
+  projectId: "techfixpro-4338f",
+  storageBucket: "techfixpro-4338f.firebasestorage.app",
+  messagingSenderId: "31911783369",
+  appId: "1:31911783369:web:72628b1b7ba7055be11618"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 // =========== DATA ===========
 const ESTADOS_CLASS={Pendiente:'b-pend','En proceso':'b-proc',Listo:'b-list',Entregado:'b-entr',Cancelado:'b-canc'};
-let ordenes=JSON.parse(localStorage.getItem('ordenes_tf')||'null')||[
-  {id:1,cliente:'Ana García',tel:'11 4523-7890',email:'ana@mail.com',equipo:'Notebook Lenovo IdeaPad',serie:'SN12345',fecha:'2026-04-01',problema:'No enciende, hace pitidos al arrancar',diag:'RAM defectuosa, reemplazada por módulo de 8GB',costo:15000,estado:'Entregado',notas:'Cliente satisfecha'},
-  {id:2,cliente:'Carlos Ruiz',tel:'11 6734-1122',email:'',equipo:'PC escritorio genérica',serie:'',fecha:'2026-04-05',problema:'Pantalla azul frecuente',diag:'Disco rígido con sectores defectuosos',costo:22000,estado:'En proceso',notas:'Esperando disco nuevo'},
-  {id:3,cliente:'Marta Sosa',tel:'11 3341-9988',email:'marta@gmail.com',equipo:'MacBook Air M1',serie:'C02XY1234',fecha:'2026-04-08',problema:'Teclado con teclas que no responden',diag:'',costo:0,estado:'Pendiente',notas:''},
-  {id:4,cliente:'Diego Fernández',tel:'11 7823-4455',email:'',equipo:'Monitor Samsung 24"',serie:'',fecha:'2026-04-10',problema:'Parpadea y se apaga',diag:'Condensadores dañados en plano de alimentación',costo:8500,estado:'Listo',notas:'Avisar al cliente'},
-];
-let nextId=Math.max(...ordenes.map(o=>o.id),0)+1;
+let ordenes=[];
+let solicitudes=[];
 let editingId=null;
 let currentDetId=null;
-function saveOrdenes(){localStorage.setItem("ordenes_tf",JSON.stringify(ordenes));nextId=Math.max(...ordenes.map(o=>o.id),0)+1;}
+
+// ---- Listeners en tiempo real ----
+function iniciarListeners(){
+  // Órdenes de trabajo
+  const qOT=query(collection(db,'ordenes'),orderBy('creadoEn','desc'));
+  onSnapshot(qOT, snap=>{
+    ordenes=snap.docs.map(d=>({_id:d.id,...d.data()}));
+    renderOrdenes();
+    renderDash();
+    renderClientes();
+  });
+
+  // Solicitudes web — tiempo real, badge se actualiza al instante
+  const qSol=query(collection(db,'solicitudes'),orderBy('creadoEn','desc'));
+  onSnapshot(qSol, snap=>{
+    solicitudes=snap.docs.map(d=>({_id:d.id,...d.data()}));
+    updateBadge();
+    renderSolicitudes();
+    renderDash();
+  });
+}
+
+async function saveOT(datos){
+  if(editingId){
+    await updateDoc(doc(db,'ordenes',editingId),{...datos,actualizadoEn:serverTimestamp()});
+  } else {
+    await addDoc(collection(db,'ordenes'),{...datos,creadoEn:serverTimestamp()});
+  }
+}
+async function deleteOT(firestoreId){
+  await deleteDoc(doc(db,'ordenes',firestoreId));
+}
+async function updateSolicitud(firestoreId,datos){
+  await updateDoc(doc(db,'solicitudes',firestoreId),datos);
+}
 
 // =========== NAV ===========
 const titles={dashboard:'Dashboard',ordenes:'Órdenes de Trabajo',solicitudes:'Solicitudes Web',clientes:'Clientes'};
@@ -416,6 +459,8 @@ function showView(id,el){
   if(id==='solicitudes')renderSolicitudes();
   if(id==='clientes')renderClientes();
 }
+// Expose to onclick handlers
+window.showView=showView;
 
 // =========== HELPERS ===========
 function fmt(f){if(!f)return'-';const[y,m,d]=f.split('-');return`${d}/${m}/${y}`}
@@ -429,19 +474,18 @@ function renderDash(){
   document.getElementById('d-proc').textContent=ordenes.filter(o=>o.estado==='En proceso').length;
   document.getElementById('d-list').textContent=ordenes.filter(o=>o.estado==='Listo'||o.estado==='Entregado').length;
   const ul=document.getElementById('dash-ultimas');
-  const recientes=[...ordenes].sort((a,b)=>b.id-a.id).slice(0,5);
+  const recientes=ordenes.slice(0,5);
   ul.innerHTML=recientes.length?recientes.map(o=>`
     <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--borde2);display:flex;justify-content:space-between;align-items:center">
-      <div><div style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--turquesa);font-size:13px">OT-${String(o.id).padStart(4,'0')}</div><div style="font-size:12px;color:var(--gris2)">${o.cliente} · ${o.equipo}</div></div>
-      <span class="badge ${ESTADOS_CLASS[o.estado]}">${o.estado}</span>
+      <div><div style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--turquesa);font-size:13px">${o._id?o._id.slice(-6).toUpperCase():'—'}</div><div style="font-size:12px;color:var(--gris2)">${o.cliente} · ${o.equipo}</div></div>
+      <span class="badge ${ESTADOS_CLASS[o.estado]||'b-pend'}">${o.estado}</span>
     </div>`).join(''):'<div style="padding:1.25rem;text-align:center;color:var(--gris2);font-size:13px">Sin órdenes aún</div>';
-  const sols=JSON.parse(localStorage.getItem('solicitudes')||'[]');
+  const pend=solicitudes.filter(s=>s.estado==='Pendiente revisión');
   const sd=document.getElementById('dash-solicitudes');
-  const pend=sols.filter(s=>s.estado==='Pendiente revisión');
   sd.innerHTML=pend.length?pend.slice(0,3).map(s=>`
     <div style="padding:.625rem 0;border-bottom:1px solid var(--borde2)">
       <div style="font-weight:500;color:var(--blanco);font-size:13px">${s.nombre} ${s.apellido}</div>
-      <div style="font-size:12px;color:var(--gris2)">${s.tipo} · ${fmt(s.fecha)}</div>
+      <div style="font-size:12px;color:var(--gris2)">${s.tipo||'—'} · ${fmt(s.fecha)}</div>
     </div>`).join('')+'<div style="padding:.75rem 0"><button class="btn btn-t btn-sm" onclick="showView(\'solicitudes\',null)">Ver todas →</button></div>'
     :'<div style="text-align:center;padding:1rem;color:var(--gris2);font-size:13px">Sin solicitudes pendientes</div>';
   updateBadge();
@@ -452,39 +496,38 @@ function renderOrdenes(){
   const q=(document.getElementById('buscar-ot').value||'').toLowerCase();
   const est=document.getElementById('filtro-est').value;
   let lista=ordenes.filter(o=>{
-    const m=!q||(o.cliente+o.equipo+o.problema+String(o.id)).toLowerCase().includes(q);
+    const m=!q||(o.cliente+o.equipo+o.problema+(o._id||'')).toLowerCase().includes(q);
     const me=!est||o.estado===est;
     return m&&me;
-  }).sort((a,b)=>b.id-a.id);
+  });
   const body=document.getElementById('ot-body');
   const empty=document.getElementById('ot-empty');
   if(!lista.length){body.innerHTML='';empty.style.display='block';return}
   empty.style.display='none';
   body.innerHTML=lista.map(o=>`<tr>
-    <td class="ot-num">OT-${String(o.id).padStart(4,'0')}</td>
+    <td class="ot-num">${(o._id||'').slice(-6).toUpperCase()}</td>
     <td>${o.cliente}</td>
     <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.equipo}</td>
     <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gris2)">${o.problema}</td>
     <td style="white-space:nowrap">${fmt(o.fecha)}</td>
-    <td><span class="badge ${ESTADOS_CLASS[o.estado]}">${o.estado}</span></td>
+    <td><span class="badge ${ESTADOS_CLASS[o.estado]||'b-pend'}">${o.estado}</span></td>
     <td style="white-space:nowrap">${moneda(o.costo)}</td>
     <td><div class="actions">
-      <button class="btn btn-t btn-sm btn-icon" onclick="verOT(${o.id})" title="Ver">👁</button>
-      <button class="btn btn-ghost btn-sm btn-icon" onclick="editarOT(${o.id})" title="Editar">✏️</button>
-      <button class="btn btn-sm btn-icon" style="background:var(--danger-dim);color:var(--danger);border:1px solid rgba(239,68,68,0.2)" onclick="eliminarOT(${o.id})" title="Eliminar">✕</button>
+      <button class="btn btn-t btn-sm btn-icon" onclick="verOT('${o._id}')" title="Ver">👁</button>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="editarOT('${o._id}')" title="Editar">✏️</button>
+      <button class="btn btn-sm btn-icon" style="background:var(--danger-dim);color:var(--danger);border:1px solid rgba(239,68,68,0.2)" onclick="eliminarOT('${o._id}')" title="Eliminar">✕</button>
     </div></td>
   </tr>`).join('');
 }
+window.renderOrdenes=renderOrdenes;
 
 function abrirNuevaOrden(datos){
   editingId=null;
   document.getElementById('m-titulo').textContent='Nueva Orden de Trabajo';
-  // Limpiar todos los campos primero
   ['cliente','tel','email','equipo','serie','problema','diag','notas'].forEach(k=>document.getElementById('m-'+k).value='');
   document.getElementById('m-costo').value='';
   document.getElementById('m-estado').value='Pendiente';
   document.getElementById('m-fecha').value=hoy();
-  // Si viene de una solicitud web, mapear los campos
   if(datos){
     document.getElementById('m-cliente').value=((datos.nombre||'')+' '+(datos.apellido||'')).trim();
     document.getElementById('m-tel').value=datos.tel||'';
@@ -495,11 +538,12 @@ function abrirNuevaOrden(datos){
   }
   abrirModal('modal-ot');
 }
+window.abrirNuevaOrden=abrirNuevaOrden;
 
-function editarOT(id){
-  const o=ordenes.find(x=>x.id===id);if(!o)return;
-  editingId=id;
-  document.getElementById('m-titulo').textContent='Editar OT-'+String(id).padStart(4,'0');
+function editarOT(firestoreId){
+  const o=ordenes.find(x=>x._id===firestoreId);if(!o)return;
+  editingId=firestoreId;
+  document.getElementById('m-titulo').textContent='Editar OT '+firestoreId.slice(-6).toUpperCase();
   document.getElementById('m-cliente').value=o.cliente;
   document.getElementById('m-tel').value=o.tel||'';
   document.getElementById('m-email').value=o.email||'';
@@ -514,87 +558,103 @@ function editarOT(id){
   cerrar('modal-det');
   abrirModal('modal-ot');
 }
+window.editarOT=editarOT;
 
-function guardarOT(){
+async function guardarOT(){
   const cliente=document.getElementById('m-cliente').value.trim();
   const equipo=document.getElementById('m-equipo').value.trim();
   const problema=document.getElementById('m-problema').value.trim();
   if(!cliente||!equipo||!problema){alert('Completá los campos obligatorios: Cliente, Equipo y Problema.');return}
-  const datos={cliente,equipo,problema,tel:document.getElementById('m-tel').value.trim(),email:document.getElementById('m-email').value.trim(),serie:document.getElementById('m-serie').value.trim(),fecha:document.getElementById('m-fecha').value,diag:document.getElementById('m-diag').value.trim(),costo:parseFloat(document.getElementById('m-costo').value)||0,estado:document.getElementById('m-estado').value,notas:document.getElementById('m-notas').value.trim()};
-  if(editingId){Object.assign(ordenes.find(o=>o.id===editingId),datos);}
-  else{ordenes.push({id:nextId++,...datos})}
-  saveOrdenes();cerrar('modal-ot');renderOrdenes();renderDash();
+  const btn=document.querySelector('#modal-ot .btn-n');
+  btn.textContent='Guardando...';btn.disabled=true;
+  try{
+    const datos={cliente,equipo,problema,
+      tel:document.getElementById('m-tel').value.trim(),
+      email:document.getElementById('m-email').value.trim(),
+      serie:document.getElementById('m-serie').value.trim(),
+      fecha:document.getElementById('m-fecha').value,
+      diag:document.getElementById('m-diag').value.trim(),
+      costo:parseFloat(document.getElementById('m-costo').value)||0,
+      estado:document.getElementById('m-estado').value,
+      notas:document.getElementById('m-notas').value.trim()
+    };
+    await saveOT(datos);
+    cerrar('modal-ot');
+  }catch(e){alert('Error al guardar: '+e.message);}
+  btn.textContent='Guardar';btn.disabled=false;
 }
+window.guardarOT=guardarOT;
 
-function verOT(id){
-  const o=ordenes.find(x=>x.id===id);if(!o)return;
-  currentDetId=id;
-  document.getElementById('det-titulo').textContent='OT-'+String(o.id).padStart(4,'0');
-  const rows=[['Cliente',o.cliente],['Teléfono',o.tel||'-'],['Email',o.email||'-'],['Equipo',o.equipo],['N° Serie',o.serie||'-'],['Fecha ingreso',fmt(o.fecha)],['Problema',o.problema],['Diagnóstico',o.diag||'—'],['Estado',`<span class="badge ${ESTADOS_CLASS[o.estado]}">${o.estado}</span>`],['Costo',moneda(o.costo)],['Notas',o.notas||'-']];
+function verOT(firestoreId){
+  const o=ordenes.find(x=>x._id===firestoreId);if(!o)return;
+  currentDetId=firestoreId;
+  document.getElementById('det-titulo').textContent='OT '+firestoreId.slice(-6).toUpperCase();
+  const rows=[['Cliente',o.cliente],['Teléfono',o.tel||'-'],['Email',o.email||'-'],['Equipo',o.equipo],['N° Serie',o.serie||'-'],['Fecha ingreso',fmt(o.fecha)],['Problema',o.problema],['Diagnóstico',o.diag||'—'],['Estado',`<span class="badge ${ESTADOS_CLASS[o.estado]||'b-pend'}">${o.estado}</span>`],['Costo',moneda(o.costo)],['Notas',o.notas||'-']];
   document.getElementById('det-body').innerHTML=rows.map(([k,v])=>`<div class="det-row"><span class="det-k">${k}</span><span class="det-v">${v}</span></div>`).join('');
-  document.getElementById('det-edit-btn').onclick=()=>editarOT(id);
+  document.getElementById('det-edit-btn').onclick=()=>editarOT(firestoreId);
   abrirModal('modal-det');
 }
+window.verOT=verOT;
 
-function eliminarOT(id){if(!confirm('¿Eliminar la orden OT-'+String(id).padStart(4,'0')+'? Esta acción no se puede deshacer.'))return;ordenes=ordenes.filter(o=>o.id!==id);saveOrdenes();renderOrdenes();renderDash()}
+async function eliminarOT(firestoreId){
+  if(!confirm('¿Eliminar esta orden? Esta acción no se puede deshacer.'))return;
+  await deleteOT(firestoreId);
+}
+window.eliminarOT=eliminarOT;
 
 function exportarCSV(){
   const h=['N° OT','Cliente','Teléfono','Email','Equipo','Serie','Fecha','Problema','Diagnóstico','Estado','Costo','Notas'];
-  const rows=ordenes.map(o=>['OT-'+String(o.id).padStart(4,'0'),o.cliente,o.tel||'',o.email||'',o.equipo,o.serie||'',fmt(o.fecha),o.problema,o.diag||'',o.estado,o.costo||0,o.notas||'']);
+  const rows=ordenes.map(o=>[(o._id||'').slice(-6).toUpperCase(),o.cliente,o.tel||'',o.email||'',o.equipo,o.serie||'',fmt(o.fecha),o.problema,o.diag||'',o.estado,o.costo||0,o.notas||'']);
   const csv=[h,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='ordenes_techfix.csv';a.click();
 }
+window.exportarCSV=exportarCSV;
 
 // =========== SOLICITUDES ===========
 function renderSolicitudes(){
-  const sols=JSON.parse(localStorage.getItem('solicitudes')||'[]');
   updateBadge();
   const c=document.getElementById('sol-lista');
-  if(!sols.length){c.innerHTML='<div class="empty-state"><div class="es-icon">📩</div><p>No hay solicitudes recibidas desde el sitio web todavía.</p></div>';return}
-  c.innerHTML=sols.slice().reverse().map((s)=>`
+  if(!solicitudes.length){c.innerHTML='<div class="empty-state"><div class="es-icon">📩</div><p>No hay solicitudes recibidas desde el sitio web todavía.</p></div>';return}
+  c.innerHTML=solicitudes.map((s)=>`
     <div class="sol-card">
       <div style="flex-shrink:0;width:40px;height:40px;background:var(--naranja-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--naranja);font-size:16px">${(s.nombre||'?')[0]}</div>
       <div class="sol-info">
         <div class="sol-title">${s.nombre} ${s.apellido} — <span style="color:var(--turquesa)">${s.tipo||'Sin tipo'}</span></div>
-        <div class="sol-meta">📞 ${s.tel||'-'} · 📧 ${s.mail||'-'} · ${fmt(s.fecha)} · ID: <span style="color:var(--gris1)">${s.id}</span></div>
+        <div class="sol-meta">📞 ${s.tel||'-'} · 📧 ${s.mail||'-'} · ${fmt(s.fecha)} · <span style="color:var(--gris1)">${(s._id||'').slice(-6).toUpperCase()}</span></div>
         <div style="margin-top:.4rem;font-size:12px;color:var(--gris2);line-height:1.5">${s.desc||''}</div>
         ${s.marca||s.modelo?`<div style="margin-top:.3rem;font-size:12px;color:var(--gris3)">${[s.marca,s.modelo].filter(Boolean).join(' ')}</div>`:''}
         <div style="margin-top:.5rem"><span class="badge ${s.estado==='Pendiente revisión'?'b-sol':'b-entr'}">${s.estado}</span> ${s.urgencia==='urgente'?'<span class="badge b-pend" style="margin-left:4px">Urgente</span>':''}</div>
       </div>
       <div class="sol-actions">
-        <button class="btn btn-t btn-sm" onclick="convertirSol('${s.id}')">Crear OT</button>
-        <button class="btn btn-ghost btn-sm" onclick="marcarProcesada('${s.id}')">✓ Ok</button>
+        <button class="btn btn-t btn-sm" onclick="convertirSol('${s._id}')">Crear OT</button>
+        <button class="btn btn-ghost btn-sm" onclick="marcarProcesada('${s._id}')">✓ Ok</button>
       </div>
     </div>`).join('');
 }
 
-function convertirSol(solId){
-  const sols=JSON.parse(localStorage.getItem('solicitudes')||'[]');
-  const s=sols.find(x=>x.id===solId);if(!s)return;
-  // Marcar como procesada
-  s.estado='Procesada';
-  localStorage.setItem('solicitudes',JSON.stringify(sols));
-  // Ir a órdenes y abrir modal con datos prellenados
+async function convertirSol(firestoreId){
+  const s=solicitudes.find(x=>x._id===firestoreId);if(!s)return;
+  await updateSolicitud(firestoreId,{estado:'Procesada'});
   showView('ordenes',document.querySelectorAll('.nav-item')[1]);
   abrirNuevaOrden(s);
 }
+window.convertirSol=convertirSol;
 
-function marcarProcesada(solId){
-  const sols=JSON.parse(localStorage.getItem('solicitudes')||'[]');
-  const s=sols.find(x=>x.id===solId);if(s)s.estado='Procesada';
-  localStorage.setItem('solicitudes',JSON.stringify(sols));
-  renderSolicitudes();
+async function marcarProcesada(firestoreId){
+  await updateSolicitud(firestoreId,{estado:'Procesada'});
 }
+window.marcarProcesada=marcarProcesada;
 
-function limpiarSolicitudes(){
-  const sols=JSON.parse(localStorage.getItem('solicitudes')||'[]').filter(s=>s.estado==='Pendiente revisión');
-  localStorage.setItem('solicitudes',JSON.stringify(sols));
-  renderSolicitudes();
+async function limpiarSolicitudes(){
+  const procesadas=solicitudes.filter(s=>s.estado==='Procesada');
+  if(!procesadas.length){alert('No hay solicitudes procesadas para limpiar.');return}
+  if(!confirm(`¿Eliminar ${procesadas.length} solicitud(es) procesada(s)?`))return;
+  await Promise.all(procesadas.map(s=>deleteDoc(doc(db,'solicitudes',s._id))));
 }
+window.limpiarSolicitudes=limpiarSolicitudes;
 
 function updateBadge(){
-  const sols=JSON.parse(localStorage.getItem('solicitudes')||'[]');
-  const n=sols.filter(s=>s.estado==='Pendiente revisión').length;
+  const n=solicitudes.filter(s=>s.estado==='Pendiente revisión').length;
   const b=document.getElementById('sol-badge');
   b.textContent=n||'';b.style.display=n?'inline':'none';
 }
@@ -621,17 +681,17 @@ function renderClientes(){
     <td>${fmt(c.ultima)}</td>
   </tr>`).join('');
 }
+window.renderClientes=renderClientes;
 
 // =========== MODAL ===========
 function abrirModal(id){document.getElementById(id).classList.add('open')}
 function cerrar(id){document.getElementById(id).classList.remove('open')}
+window.cerrar=cerrar;
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'))});
 
 // =========== INIT ===========
 document.getElementById('fecha-top').textContent=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-// Actualizar badge cada 30s si hay nuevas solicitudes
-setInterval(updateBadge,30000);
 
 // =========== LOGIN ===========
 const CLAVE='techfix2026';
@@ -708,8 +768,7 @@ function actualizarTimer(){
 function mostrarApp(){
   document.getElementById('login-screen').classList.remove('show');
   document.getElementById('app-wrapper').classList.add('show');
-  renderDash();
-  updateBadge();
+  iniciarListeners();
 }
 
 function cerrarSesion(){

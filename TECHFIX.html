@@ -560,12 +560,26 @@ footer{background:var(--negro3);border-top:1px solid var(--borde);padding:2rem 0
   </div>
 </div>
 
-<script>
-function abrirContrato(e){e&&e.preventDefault();document.getElementById('modal-contrato').classList.add('open')}
-function cerrarContrato(){document.getElementById('modal-contrato').classList.remove('open')}
-function aceptarContrato(){document.getElementById('chk-contrato').checked=true;cerrarContrato()}
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-function enviarSolicitud(){
+const firebaseConfig = {
+  apiKey: "AIzaSyDIxusiIA-Zl0inSrL2T-7OwvhAIvIu2bY",
+  authDomain: "techfixpro-4338f.firebaseapp.com",
+  projectId: "techfixpro-4338f",
+  storageBucket: "techfixpro-4338f.firebasestorage.app",
+  messagingSenderId: "31911783369",
+  appId: "1:31911783369:web:72628b1b7ba7055be11618"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.abrirContrato=function(e){e&&e.preventDefault();document.getElementById('modal-contrato').classList.add('open')}
+window.cerrarContrato=function(){document.getElementById('modal-contrato').classList.remove('open')}
+window.aceptarContrato=function(){document.getElementById('chk-contrato').checked=true;cerrarContrato()}
+
+window.enviarSolicitud=async function(){
   const nombre=document.getElementById('f-nombre').value.trim();
   const apellido=document.getElementById('f-apellido').value.trim();
   const tel=document.getElementById('f-tel').value.trim();
@@ -576,24 +590,32 @@ function enviarSolicitud(){
   if(!nombre||!apellido||!tel||!mail||!tipo||!desc){alert('Por favor completá todos los campos obligatorios.');return}
   if(!chk){alert('Debés aceptar los Términos y Condiciones para continuar.');return}
 
-  // Guardar solicitud en localStorage para que el admin la vea
-  const solicitudes=JSON.parse(localStorage.getItem('solicitudes')||'[]');
-  const id='SOL-'+String(Date.now()).slice(-6);
-  solicitudes.push({
-    id,nombre,apellido,tel,mail,tipo,
-    marca:document.getElementById('f-marca').value.trim(),
-    modelo:document.getElementById('f-modelo').value.trim(),
-    desc,
-    urgencia:document.getElementById('f-urgencia').value,
-    fecha:new Date().toISOString().slice(0,10),
-    estado:'Pendiente revisión'
-  });
-  localStorage.setItem('solicitudes',JSON.stringify(solicitudes));
+  const btn=document.querySelector('.btn-submit');
+  btn.textContent='Enviando...';btn.disabled=true;
 
-  document.getElementById('form-solicitud').style.display='none';
-  const sm=document.getElementById('success-msg');
-  sm.style.display='block';
-  document.getElementById('ot-generada').textContent='Tu código de solicitud: '+id;
+  try {
+    const solicitud={
+      nombre,apellido,tel,mail,tipo,
+      marca:document.getElementById('f-marca').value.trim(),
+      modelo:document.getElementById('f-modelo').value.trim(),
+      desc,
+      urgencia:document.getElementById('f-urgencia').value,
+      fecha:new Date().toISOString().slice(0,10),
+      estado:'Pendiente revisión',
+      creadoEn:serverTimestamp()
+    };
+    const docRef=await addDoc(collection(db,'solicitudes'),solicitud);
+    const id='SOL-'+docRef.id.slice(-6).toUpperCase();
+
+    document.getElementById('form-solicitud').style.display='none';
+    const sm=document.getElementById('success-msg');
+    sm.style.display='block';
+    document.getElementById('ot-generada').textContent='Tu código de solicitud: '+id;
+  } catch(err){
+    console.error(err);
+    alert('Hubo un error al enviar la solicitud. Por favor intentá de nuevo.');
+    btn.textContent='ENVIAR SOLICITUD';btn.disabled=false;
+  }
 }
 
 // Animaciones scroll
