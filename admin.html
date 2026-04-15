@@ -243,7 +243,10 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--blanco)}
 <!-- MAIN -->
 <div class="main">
   <div class="topbar">
-    <div class="page-title" id="page-title">Dashboard</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div id="fb-status" style="font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600;letter-spacing:0.05em;background:rgba(245,158,11,0.15);color:#f59e0b;">⏳ Conectando...</div>
+    </div>
     <div class="topbar-right">
       <span id="fecha-top" style="font-size:12px;color:var(--gris2)"></span>
       <button class="btn btn-n" onclick="showView('ordenes',null);setTimeout(()=>abrirNuevaOrden(),100)">+ Nueva OT</button>
@@ -391,7 +394,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--blanco)}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDIxusiIA-Zl0inSrL2T-7OwvhAIvIu2bY",
@@ -413,23 +416,41 @@ let currentDetId=null;
 
 // ---- Listeners en tiempo real ----
 function iniciarListeners(){
-  // Órdenes de trabajo
-  const qOT=query(collection(db,'ordenes'),orderBy('creadoEn','desc'));
-  onSnapshot(qOT, snap=>{
+  // Órdenes de trabajo — sin orderBy para evitar requerir índice compuesto
+  onSnapshot(collection(db,'ordenes'), snap=>{
+    document.getElementById('fb-status').textContent='🟢 Conectado';
+    document.getElementById('fb-status').style.cssText='font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600;letter-spacing:0.05em;background:rgba(34,197,94,0.12);color:#22c55e;';
     ordenes=snap.docs.map(d=>({_id:d.id,...d.data()}));
+    // Ordenar en cliente por fecha descendente
+    ordenes.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
     renderOrdenes();
     renderDash();
     renderClientes();
+  }, err=>{
+    console.error('Error OT listener:',err);
+    mostrarError('Error al cargar órdenes: '+err.message);
   });
 
-  // Solicitudes web — tiempo real, badge se actualiza al instante
-  const qSol=query(collection(db,'solicitudes'),orderBy('creadoEn','desc'));
-  onSnapshot(qSol, snap=>{
+  // Solicitudes web — tiempo real sin orderBy
+  onSnapshot(collection(db,'solicitudes'), snap=>{
     solicitudes=snap.docs.map(d=>({_id:d.id,...d.data()}));
+    // Más recientes primero
+    solicitudes.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
     updateBadge();
     renderSolicitudes();
     renderDash();
+  }, err=>{
+    console.error('Error solicitudes listener:',err);
+    mostrarError('Error al cargar solicitudes: '+err.message);
   });
+}
+
+function mostrarError(msg){
+  let el=document.getElementById('fb-error');
+  if(!el){el=document.createElement('div');el.id='fb-error';el.style.cssText='position:fixed;top:16px;right:16px;z-index:9999;background:#7f1d1d;color:#fca5a5;border:1px solid #ef4444;border-radius:6px;padding:12px 16px;font-size:13px;max-width:380px;';document.body.appendChild(el);}
+  el.textContent='⚠ '+msg;
+  el.style.display='block';
+  setTimeout(()=>{el.style.display='none'},8000);
 }
 
 async function saveOT(datos){

@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // SOLICITUDES: cualquier visitante puede crear (formulario público)
+    // El admin puede leer, actualizar y eliminar
+    match /solicitudes/{id} {
+      allow create: if true;
+      allow read, update, delete: if true;
+    }
+
+    // ÓRDENES DE TRABAJO: solo acceso completo (admin)
+    match /ordenes/{id} {
+      allow read, write: if true;
+    }
+
+  }
+}
