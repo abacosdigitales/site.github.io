@@ -8,6 +8,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -417,6 +418,27 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const auth=getAuth(app);
 
+// ===== EMAILJS =====
+emailjs.init('5EmEhV_vQmQc9U8lI');
+
+async function enviarNotificacion(ot, estadoAnterior){
+  // Solo enviar si hay email del cliente y el estado cambió
+  if(!ot.email || ot.email.trim()==='' ) return;
+  if(estadoAnterior && estadoAnterior===ot.estado) return;
+  try{
+    await emailjs.send('service_928zkc2','template_1av53iv',{
+      cliente_nombre: ot.cliente||'Cliente',
+      cliente_email:  ot.email,
+      equipo:         ot.equipo||'—',
+      estado:         ot.estado||'—',
+      diagnostico:    ot.diag?`Diagnóstico: ${ot.diag}`:'',
+    });
+    console.log('Email enviado a',ot.email);
+  }catch(e){
+    console.warn('Email no enviado:',e);
+  }
+}
+
 const EC={Pendiente:'b-pend','En proceso':'b-proc',Listo:'b-list',Entregado:'b-entr',Cancelado:'b-canc'};
 let ordenes=[],solicitudes=[],tecnicos=[],usuario=null,editingId=null,editingTecOtId=null;
 let unsubOT=null,unsubSol=null,unsubTec=null;
@@ -648,8 +670,14 @@ window.guardarOT=async function(){
       estado:document.getElementById('m-estado').value,notas:document.getElementById('m-notas').value.trim(),
       tecnicoId,tecnicoNombre:nomTec(tecnicoId)
     };
-    if(editingId){await updateDoc(doc(db,'ordenes',editingId),{...datos,actualizadoEn:serverTimestamp()});}
-    else{await addDoc(collection(db,'ordenes'),{...datos,creadoEn:serverTimestamp()});}
+    if(editingId){
+      const otAnterior=ordenes.find(o=>o._id===editingId);
+      const estadoAnterior=otAnterior?otAnterior.estado:null;
+      await updateDoc(doc(db,'ordenes',editingId),{...datos,actualizadoEn:serverTimestamp()});
+      await enviarNotificacion(datos, estadoAnterior);
+    } else {
+      await addDoc(collection(db,'ordenes'),{...datos,creadoEn:serverTimestamp()});
+    }
     cerrar('modal-ot');toast(editingId?'OT actualizada':'OT creada correctamente');
   }catch(e){toast('Error: '+e.message,'err');}
   btn.textContent='Guardar';btn.disabled=false;
@@ -693,12 +721,25 @@ window.guardarActualizacionTecnico=async function(){
   const btn=document.querySelector('#modal-tec-ot .btn-n');
   btn.textContent='Guardando...';btn.disabled=true;
   try{
+    const otAnterior=ordenes.find(o=>o._id===editingTecOtId);
+    const estadoAnterior=otAnterior?otAnterior.estado:null;
+    const nuevoEstado=document.getElementById('tec-estado').value;
+    const nuevoDiag=document.getElementById('tec-diag').value.trim();
     await updateDoc(doc(db,'ordenes',editingTecOtId),{
-      estado:document.getElementById('tec-estado').value,
-      diag:document.getElementById('tec-diag').value.trim(),
+      estado:nuevoEstado,
+      diag:nuevoDiag,
       notas:document.getElementById('tec-notas').value.trim(),
       actualizadoEn:serverTimestamp()
     });
+    if(otAnterior){
+      await enviarNotificacion({
+        cliente:otAnterior.cliente,
+        email:otAnterior.email,
+        equipo:otAnterior.equipo,
+        estado:nuevoEstado,
+        diag:nuevoDiag
+      }, estadoAnterior);
+    }
     cerrar('modal-tec-ot');toast('OT actualizada correctamente');
   }catch(e){toast('Error: '+e.message,'err');}
   btn.textContent='Guardar';btn.disabled=false;
