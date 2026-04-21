@@ -44,5 +44,252 @@ Error generating stack: `+e.message+`
         input:focus, textarea:focus, select:focus { border-color: rgba(3,159,197,0.5) !important; }
         select option { background: #111; color: #fff; }
       `}),(0,p.jsx)(te,{}),(0,p.jsx)(ne,{}),(0,p.jsx)(w,{}),(0,p.jsx)(ie,{}),(0,p.jsx)(ae,{}),(0,p.jsx)(oe,{}),(0,p.jsx)(se,{}),(0,p.jsx)(S,{})]})}(0,d.createRoot)(document.getElementById(`root`)).render((0,p.jsx)(f.StrictMode,{children:(0,p.jsx)(ce,{})}));  </script>
+
+<!-- ═══════════════════════════════════════════════
+     GALERÍA DE OBRAS — sección independiente
+     Para agregar fotos: copiá los archivos a la
+     carpeta /fotos/ y duplicá un bloque <a> abajo.
+     Ejemplo: <a href="fotos/obra7.jpeg" ...>
+════════════════════════════════════════════════ -->
+
+<!-- GLightbox desde CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+
+<style>
+  /* ── Sección galería ── */
+  #galeria {
+    background: #0D0D0D;
+    padding: 7rem 3rem;
+    border-top: 1px solid rgba(3,159,197,0.10);
+  }
+  #galeria .galeria-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  #galeria .galeria-tag {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: #039FC5;
+    display: block;
+    margin-bottom: 0.9rem;
+  }
+  #galeria h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(2rem, 3vw, 2.8rem);
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 0.8rem;
+  }
+  #galeria .galeria-sub {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.38);
+    font-weight: 300;
+    margin-bottom: 3.5rem;
+    line-height: 1.7;
+  }
+
+  /* ── Filtros de categoría ── */
+  .galeria-filtros {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+  }
+  .galeria-filtros button {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid rgba(3,159,197,0.30);
+    color: rgba(255,255,255,0.45);
+    padding: 0.45rem 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .galeria-filtros button:hover,
+  .galeria-filtros button.activo {
+    background: #039FC5;
+    border-color: #039FC5;
+    color: #fff;
+  }
+
+  /* ── Grid de obras (cards) ── */
+  .obras-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 2rem;
+  }
+  .obra-card {
+    background: #111;
+    border: 1px solid rgba(3,159,197,0.12);
+    overflow: hidden;
+  }
+  .obra-portada {
+    display: block;
+    position: relative;
+    aspect-ratio: 16/10;
+    overflow: hidden;
+    text-decoration: none;
+  }
+  .obra-portada img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.45s ease;
+    display: block;
+  }
+  .obra-portada:hover img {
+    transform: scale(1.05);
+  }
+  .obra-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    opacity: 0;
+    transition: opacity 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .obra-portada:hover .obra-overlay {
+    opacity: 1;
+  }
+  .obra-overlay-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fff;
+  }
+  .obra-overlay-inner span {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .obra-info {
+    padding: 1.4rem 1.6rem 1.8rem;
+  }
+  .obra-tipo {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: #039FC5;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .obra-titulo {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.6rem;
+    line-height: 1.25;
+  }
+  .obra-desc {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.83rem;
+    color: rgba(255,255,255,0.38);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    #galeria { padding: 5rem 1.5rem; }
+    .obras-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  }
+</style>
+
+<section id="galeria">
+  <div class="galeria-inner">
+    <span class="galeria-tag">Portafolio</span>
+    <h2>Obras Realizadas</h2>
+    <p class="galeria-sub">
+      Más de dos décadas de proyectos ejecutados con rigor técnico y compromiso con la calidad.
+    </p>
+
+    <!-- ══════════════════════════════════════════
+         CARDS DE OBRAS
+         Cada card muestra la foto de portada y abre
+         el lightbox con todas las fotos de esa obra.
+         Para agregar una nueva obra: copiá un bloque
+         .obra-card y ajustá el gallery name y las fotos.
+         ══════════════════════════════════════════ -->
+    <div class="obras-grid" id="galeriaGrid">
+
+      <!-- ═══ OBRA 1: Quincho con galería y churrasquera ═══ -->
+      <!-- Foto de portada — abre el lightbox de esta obra -->
+      <div class="obra-card">
+        <a class="obra-portada glightbox"
+           href="fotos/quincho-terminado-06.jpeg"
+           data-gallery="quincho"
+           data-description="Quincho con galería — Vista exterior terminada con sendero de madera y piedra blanca">
+          <img src="fotos/quincho-terminado-06.jpeg" alt="Quincho terminado">
+          <div class="obra-overlay">
+            <div class="obra-overlay-inner">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>Ver 20 fotos</span>
+            </div>
+          </div>
+        </a>
+        <div class="obra-info">
+          <span class="obra-tipo">Construcción</span>
+          <h3 class="obra-titulo">Quincho con Galería y Churrasquera</h3>
+          <p class="obra-desc">Galería abierta con columnas de ladrillo visto, techo de pino machimbrado lacado, churrasquera de ladrillo y sendero exterior.</p>
+        </div>
+
+        <!-- Fotos ocultas del lightbox (todas excepto la portada) -->
+        <a class="glightbox" href="fotos/quincho-terminado-07.jpeg" data-gallery="quincho" data-description="Quincho — Interior terminado con techo lacado, puertas y luminarias industriales" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-terminado-01.jpeg" data-gallery="quincho" data-description="Quincho — Interior terminado, techo barnizado y luminarias industriales colgantes" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-terminado-02.jpeg" data-gallery="quincho" data-description="Quincho — Interior con techo lacado, puertas barnizadas y luminaria colgante" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-terminado-03.jpeg" data-gallery="quincho" data-description="Quincho — Techo barnizado con churrasquera terminada y luminarias encendidas" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-terminado-04.jpeg" data-gallery="quincho" data-description="Quincho — Vista exterior con apliques de iluminación en columnas" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-terminado-05.jpeg" data-gallery="quincho" data-description="Quincho — Churrasquera terminada con iluminación" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-01.jpeg" data-gallery="quincho" data-description="Quincho en obra — Churrasquera de ladrillo recién terminada, techo de pino sin pintar" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-02.jpeg" data-gallery="quincho" data-description="Quincho en obra — Operarios instalando el techo de madera" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-03.jpeg" data-gallery="quincho" data-description="Quincho en obra — Vista exterior de galería con techo recién colocado" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-04.jpeg" data-gallery="quincho" data-description="Quincho en obra — Interior con paredes sin pintar y columna de ladrillo" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-05.jpeg" data-gallery="quincho" data-description="Quincho en obra — Vista exterior frontal avanzada" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-06.jpeg" data-gallery="quincho" data-description="Quincho en obra — Interior con piso cerámico recién colocado" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-07.jpeg" data-gallery="quincho" data-description="Quincho en obra — Colocación de piso cerámico, ángulo desde el fondo" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-08.jpeg" data-gallery="quincho" data-description="Quincho en obra — Exterior con columnas de ladrillo y puertas sin pintar" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-09.jpeg" data-gallery="quincho" data-description="Quincho en obra — Interior con churrasquera y piso terminado" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-10.jpeg" data-gallery="quincho" data-description="Quincho en obra — Detalle columna de ladrillo visto exterior" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-11.jpeg" data-gallery="quincho" data-description="Quincho en obra — Detalle churrasquera con aplique de pared, paredes pintadas" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-12.jpeg" data-gallery="quincho" data-description="Quincho en obra — Operario aplicando pintura en columnas exteriores" style="display:none"></a>
+        <a class="glightbox" href="fotos/quincho-construccion-13.jpeg" data-gallery="quincho" data-description="Quincho en obra — Interior con puertas instaladas sin barnizar, piso listo" style="display:none"></a>
+      </div>
+
+    </div><!-- /obras-grid -->
+  </div><!-- /galeria-inner -->
+</section>
+
+<script>
+  // Inicializar GLightbox
+  const lightbox = GLightbox({
+    selector: '.glightbox',
+    touchNavigation: true,
+    loop: true,
+    autoplayVideos: false,
+    skin: 'clean',
+    descPosition: 'bottom',
+  });
+
+  // Las imágenes ya están cargadas directamente con <img>
+</script>
+
 </body>
 </html>
