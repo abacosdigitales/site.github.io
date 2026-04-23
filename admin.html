@@ -367,6 +367,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--blanco)}
     <div class="modal-bd" id="det-body"></div>
     <div class="modal-ft">
       <button class="btn btn-ghost" onclick="cerrar('modal-det')">Cerrar</button>
+      <button class="btn btn-ghost" id="det-print-btn">🖨 Imprimir</button>
       <button class="btn btn-t" id="det-edit-btn">Editar</button>
     </div>
   </div>
@@ -440,7 +441,7 @@ async function enviarNotificacion(ot, estadoAnterior){
 }
 
 const EC={Pendiente:'b-pend','En proceso':'b-proc',Listo:'b-list',Entregado:'b-entr',Cancelado:'b-canc'};
-let ordenes=[],solicitudes=[],tecnicos=[],usuario=null,editingId=null,editingTecOtId=null;
+let ordenes=[],solicitudes=[],tecnicos=[],usuario=null,editingId=null,editingTecOtId=null,currentDetId=null;
 let unsubOT=null,unsubSol=null,unsubTec=null;
 
 // ===== AUTH =====
@@ -594,6 +595,7 @@ function renderDash(){
 
 // ===== ORDENES =====
 window.renderOrdenes=function(){
+  if(!usuario)return;
   const q=(document.getElementById('buscar-ot').value||'').toLowerCase();
   const est=document.getElementById('filtro-est').value;
   const lista=ordenes.filter(o=>(!q||(o.cliente+o.equipo+o.problema+(o._id||'')).toLowerCase().includes(q))&&(!est||o.estado===est));
@@ -602,25 +604,38 @@ window.renderOrdenes=function(){
   if(!lista.length){body.innerHTML='';empty.style.display='block';return}
   empty.style.display='none';
   const esAdmin=usuario.rol==='admin';
-  body.innerHTML=lista.map(o=>`<tr>
-    <td class="ot-num">${(o._id||'').slice(-6).toUpperCase()}</td>
-    <td>${o.cliente}</td>
-    <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.equipo}</td>
-    <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gris2)">${o.problema}</td>
-    <td style="white-space:nowrap">${fmt(o.fecha)}</td>
-    <td style="white-space:nowrap;color:var(--info)">${nomTec(o.tecnicoId)}</td>
-    <td><span class="badge ${EC[o.estado]||'b-pend'}">${o.estado}</span></td>
-    <td style="white-space:nowrap">${moneda(o.costo)}</td>
-    <td><div class="actions">
-      <button class="btn btn-t btn-sm btn-icon" onclick="verOT('${o._id}')">👁</button>
-      ${esAdmin
-        ?`<button class="btn btn-ghost btn-sm btn-icon" onclick="editarOT('${o._id}')">✏️</button>
-           <button class="btn btn-sm btn-icon" style="background:var(--danger-dim);color:var(--danger);border:1px solid rgba(239,68,68,0.2)" onclick="eliminarOT('${o._id}')">✕</button>`
-        :`<button class="btn btn-ghost btn-sm btn-icon" onclick="abrirActTecnico('${o._id}')">✏️</button>`
-      }
-    </div></td>
-  </tr>`).join('');
+  body.innerHTML=lista.map(o=>{
+    const id=o._id||'';
+    const btns=esAdmin
+      ?'<button class="btn btn-ghost btn-sm btn-icon" data-action="editar" data-id="'+id+'">✏️</button>'
+       +'<button class="btn btn-sm btn-icon" style="background:var(--danger-dim);color:var(--danger);border:1px solid rgba(239,68,68,0.2)" data-action="eliminar" data-id="'+id+'">✕</button>'
+      :'<button class="btn btn-ghost btn-sm btn-icon" data-action="actualizar" data-id="'+id+'">✏️</button>';
+    return '<tr>'
+      +'<td class="ot-num">'+id.slice(-6).toUpperCase()+'</td>'
+      +'<td>'+o.cliente+'</td>'
+      +'<td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+o.equipo+'</td>'
+      +'<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gris2)">'+o.problema+'</td>'
+      +'<td style="white-space:nowrap">'+fmt(o.fecha)+'</td>'
+      +'<td style="white-space:nowrap;color:var(--info)">'+nomTec(o.tecnicoId)+'</td>'
+      +'<td><span class="badge '+(EC[o.estado]||'b-pend')+'">'+o.estado+'</span></td>'
+      +'<td style="white-space:nowrap">'+moneda(o.costo)+'</td>'
+      +'<td><div class="actions">'
+      +'<button class="btn btn-t btn-sm btn-icon" data-action="ver" data-id="'+id+'">👁</button>'
+      +btns+'</div></td></tr>';
+  }).join('');
 }
+
+// Event delegation — evita problemas con type="module" y onclick inline
+document.getElementById('ot-body').addEventListener('click',function(e){
+  const btn=e.target.closest('[data-action]');
+  if(!btn)return;
+  const action=btn.dataset.action;
+  const id=btn.dataset.id;
+  if(action==='ver')verOT(id);
+  else if(action==='editar')editarOT(id);
+  else if(action==='eliminar')eliminarOT(id);
+  else if(action==='actualizar')abrirActTecnico(id);
+});
 
 window.abrirNuevaOrden=function(datos){
   editingId=null;
@@ -685,12 +700,80 @@ window.guardarOT=async function(){
 
 window.verOT=function(fid){
   const o=ordenes.find(x=>x._id===fid);if(!o)return;
+  currentDetId=fid;
   document.getElementById('det-titulo').textContent='OT '+fid.slice(-6).toUpperCase();
-  const rows=[['Cliente',o.cliente],['Teléfono',o.tel||'-'],['Email',o.email||'-'],['Equipo',o.equipo],['N° Serie',o.serie||'-'],['Ingreso',fmt(o.fecha)],['Técnico',nomTec(o.tecnicoId)],['Problema',o.problema],['Diagnóstico',o.diag||'—'],['Estado',`<span class="badge ${EC[o.estado]||'b-pend'}">${o.estado}</span>`],['Costo',moneda(o.costo)],['Notas',o.notas||'-']];
-  document.getElementById('det-body').innerHTML=rows.map(([k,v])=>`<div class="det-row"><span class="det-k">${k}</span><span class="det-v">${v}</span></div>`).join('');
+  const rows=[['Cliente',o.cliente],['Teléfono',o.tel||'-'],['Email',o.email||'-'],['Equipo',o.equipo],['N° Serie',o.serie||'-'],['Ingreso',fmt(o.fecha)],['Técnico',nomTec(o.tecnicoId)],['Problema',o.problema],['Diagnóstico',o.diag||'—'],['Estado','<span class="badge '+(EC[o.estado]||'b-pend')+'">'+o.estado+'</span>'],['Costo',moneda(o.costo)],['Notas',o.notas||'-']];
+  document.getElementById('det-body').innerHTML=rows.map(([k,v])=>'<div class="det-row"><span class="det-k">'+k+'</span><span class="det-v">'+v+'</span></div>').join('');
   const eb=document.getElementById('det-edit-btn');
-  if(usuario.rol==='admin'){eb.style.display='';eb.onclick=()=>editarOT(fid);}else{eb.style.display='none';}
+  const pb=document.getElementById('det-print-btn');
+  if(usuario.rol==='admin'){eb.style.display='';eb.onclick=function(){editarOT(fid);};}else{eb.style.display='none';}
+  pb.onclick=function(){imprimirOT();};
   abrirModal('modal-det');
+}
+
+window.imprimirOT=function(){
+  const ot=ordenes.find(x=>x._id===currentDetId);
+  if(!ot){alert('No se pudo obtener los datos de la OT.');return}
+  const tecNombre=nomTec(ot.tecnicoId);
+  const fecha=new Date().toLocaleDateString('es-AR');
+  const otNum=(ot._id||'').slice(-6).toUpperCase();
+  const fmtF=ot.fecha?(function(){var p=ot.fecha.split('-');return p[2]+'/'+p[1]+'/'+p[0]})():'—';
+  const costoH=ot.costo>0?'<div class="costo-box"><div class="costo-label">Total a abonar</div><div class="costo-val">$'+Number(ot.costo).toLocaleString('es-AR')+'</div></div>':'';
+  const diagH=ot.diag?'<div class="diag-box"><div class="box-label">Diagnóstico / trabajo realizado</div><div class="box-text">'+ot.diag+'</div></div>':'';
+  const notasH=ot.notas?'<div style="margin-top:10px;padding:10px 14px;background:#f9fafb;border-radius:6px"><div class="box-label">Notas</div><div class="box-text" style="color:#6b7280">'+ot.notas+'</div></div>':'';
+  const tecH=tecNombre!=='—'?'<div class="section"><div class="section-title">Técnico asignado</div><div class="field" style="display:inline-block;min-width:200px"><div class="field-label">Técnico</div><div class="field-value">'+tecNombre+'</div></div></div>':'';
+  const estClass='est-'+(ot.estado||'').replace(' ','-');
+  const html='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>OT-'+otNum+' — TechFix Pro</title>'
+    +'<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Segoe UI,Arial,sans-serif;font-size:13px;color:#111;background:#fff}'
+    +'.ticket{max-width:780px;margin:0 auto;padding:32px}'
+    +'.header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:20px;border-bottom:3px solid #00d4c8;margin-bottom:24px}'
+    +'.logo-text{font-size:26px;font-weight:700}.logo-text .t{color:#00d4c8}.logo-text .f{color:#ff6b1a}'
+    +'.logo-sub{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}'
+    +'.ot-num{text-align:right}.ot-num .num{font-size:30px;font-weight:700;color:#00d4c8}.ot-num .fch{font-size:12px;color:#888;margin-top:4px}'
+    +'.estado-bar{display:inline-block;padding:5px 16px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:20px}'
+    +'.est-Pendiente{background:#fef3c7;color:#92400e}.est-En-proceso{background:#dbeafe;color:#1e40af}'
+    +'.est-Listo{background:#d1fae5;color:#065f46}.est-Entregado{background:#d1fae5;color:#065f46}.est-Cancelado{background:#f3f4f6;color:#6b7280}'
+    +'.section{margin-bottom:18px}.section-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#00b8ae;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #e5e7eb}'
+    +'.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
+    +'.field{background:#f9fafb;border-radius:6px;padding:9px 12px}.field-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9ca3af;margin-bottom:2px}.field-value{font-size:13px;color:#111;font-weight:500}'
+    +'.field-full{grid-column:1/-1}'
+    +'.problema-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:11px 13px;margin-bottom:10px}'
+    +'.diag-box{background:#f0fdfa;border:1px solid #99f6e4;border-radius:6px;padding:11px 13px}'
+    +'.box-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9ca3af;margin-bottom:3px}.box-text{font-size:13px;color:#111;line-height:1.5}'
+    +'.footer{margin-top:28px;padding-top:18px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}'
+    +'.garantia{background:#f0fdfa;border:1px solid #99f6e4;border-radius:6px;padding:9px 13px;font-size:11px;color:#065f46;flex:1;line-height:1.5}'
+    +'.costo-box{text-align:right;flex-shrink:0}.costo-label{font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em}.costo-val{font-size:26px;font-weight:700;color:#ff6b1a}'
+    +'.firma{text-align:center;flex-shrink:0}.firma-linea{border-top:1px solid #111;width:140px;margin:36px auto 5px}.firma-label{font-size:11px;color:#6b7280}'
+    +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+    +'</style></head><body><div class="ticket">'
+    +'<div class="header"><div><div class="logo-text"><span class="t">TECH</span><span class="f">FIX</span> PRO</div><div class="logo-sub">Reparación de equipos informáticos</div></div>'
+    +'<div class="ot-num"><div class="num">OT-'+otNum+'</div><div class="fch">Emitida: '+fecha+'</div></div></div>'
+    +'<span class="estado-bar '+estClass+'">● '+(ot.estado||'—')+'</span>'
+    +'<div class="section"><div class="section-title">Datos del cliente</div><div class="grid">'
+    +'<div class="field"><div class="field-label">Nombre</div><div class="field-value">'+(ot.cliente||'—')+'</div></div>'
+    +'<div class="field"><div class="field-label">Teléfono</div><div class="field-value">'+(ot.tel||'—')+'</div></div>'
+    +'<div class="field field-full"><div class="field-label">Email</div><div class="field-value">'+(ot.email||'—')+'</div></div>'
+    +'</div></div>'
+    +'<div class="section"><div class="section-title">Datos del equipo</div><div class="grid">'
+    +'<div class="field field-full"><div class="field-label">Equipo</div><div class="field-value">'+(ot.equipo||'—')+'</div></div>'
+    +'<div class="field"><div class="field-label">N° Serie</div><div class="field-value">'+(ot.serie||'—')+'</div></div>'
+    +'<div class="field"><div class="field-label">Fecha ingreso</div><div class="field-value">'+fmtF+'</div></div>'
+    +'</div></div>'
+    +'<div class="section"><div class="section-title">Detalle del servicio</div>'
+    +'<div class="problema-box"><div class="box-label">Problema reportado</div><div class="box-text">'+(ot.problema||'—')+'</div></div>'
+    +diagH+notasH+'</div>'
+    +tecH
+    +'<div class="footer">'
+    +'<div class="garantia">✓ Garantía de 90 días sobre la reparación realizada.<br>Presentar este comprobante al momento del retiro.</div>'
+    +costoH
+    +'<div class="firma"><div class="firma-linea"></div><div class="firma-label">Firma del cliente</div></div>'
+    +'</div></div>'
+    +'<script>window.onload=function(){window.print();}<\/script>'
+    +'</body></html>';
+  const win=window.open('','_blank','width=900,height=700');
+  if(!win){alert('El navegador bloqueó la ventana emergente. Permitila para este sitio.');return}
+  win.document.write(html);
+  win.document.close();
 }
 
 window.eliminarOT=async function(fid){
