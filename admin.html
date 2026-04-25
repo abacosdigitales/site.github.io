@@ -8,6 +8,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -209,6 +210,7 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--blanco)}
     <div class="nav-group-label">Gestión</div>
     <a class="nav-item" onclick="showView('clientes',this)"><span class="nav-icon">👤</span>Clientes</a>
     <a class="nav-item admin-only" onclick="showView('tecnicos',this)"><span class="nav-icon">🔧</span>Técnicos</a>
+    <a class="nav-item admin-only" onclick="showView('estadisticas',this)"><span class="nav-icon">📈</span>Estadísticas</a>
     <div class="nav-group-label admin-only">Sitios</div>
     <a class="nav-item admin-only" href="https://abacosdigitales.github.io/site.github.io/TECHFIX" target="_blank"><span class="nav-icon">🛠️</span>TechFix Pro</a>
     <a class="nav-item admin-only" href="https://abacosdigitales.github.io/site.github.io/TECHFIX/cliente.html" target="_blank"><span class="nav-icon">👁</span>Portal cliente</a>
@@ -318,6 +320,48 @@ tr:hover td{background:rgba(255,255,255,0.02);color:var(--blanco)}
         <button class="btn btn-n" onclick="abrirModalTecnico()">+ Agregar técnico</button>
       </div>
       <div id="tecnicos-lista"></div>
+    </div>
+
+    <!-- ESTADÍSTICAS -->
+    <div class="view" id="view-estadisticas">
+      <!-- Periodo selector -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem">
+        <p style="color:var(--gris2);font-size:13px">Resumen de actividad del taller.</p>
+        <div style="display:flex;gap:.5rem">
+          <select class="filter-sel" id="est-periodo" onchange="renderEstadisticas()">
+            <option value="3">Últimos 3 meses</option>
+            <option value="6" selected>Últimos 6 meses</option>
+            <option value="12">Último año</option>
+            <option value="0">Todo</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- KPI row -->
+      <div class="stats-row" style="margin-bottom:1.25rem" id="est-kpis"></div>
+
+      <!-- Charts row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">OT por mes</div></div>
+          <div style="padding:1.25rem"><canvas id="chart-ot-mes" height="200"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Distribución por estado</div></div>
+          <div style="padding:1.25rem;display:flex;align-items:center;justify-content:center"><canvas id="chart-estados" height="200"></canvas></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Ingresos por mes ($)</div></div>
+          <div style="padding:1.25rem"><canvas id="chart-ingresos" height="200"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Ranking de técnicos</div></div>
+          <div style="padding:1.25rem" id="ranking-tecnicos"></div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -549,13 +593,14 @@ function iniciarListeners(){
 }
 
 // ===== NAV =====
-const TITLES={dashboard:'Dashboard',ordenes:'Órdenes de Trabajo',solicitudes:'Solicitudes Web',clientes:'Clientes',tecnicos:'Técnicos'};
+const TITLES={dashboard:'Dashboard',ordenes:'Órdenes de Trabajo',solicitudes:'Solicitudes Web',clientes:'Clientes',tecnicos:'Técnicos',estadisticas:'Estadísticas'};
 window.showView=function(id,el){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el)el.classList.add('active');
   document.getElementById('page-title').textContent=TITLES[id]||id;
+  if(id==='estadisticas')renderEstadisticas();
 }
 
 // ===== HELPERS =====
@@ -1055,6 +1100,123 @@ window.eliminarTecnico=async function(uid,nombre){
   if(!confirm(`¿Eliminar al técnico ${nombre}? Perderá acceso al panel.`))return;
   await deleteDoc(doc(db,'usuarios',uid));
   toast(`Técnico ${nombre} eliminado`);
+}
+
+// ===== ESTADÍSTICAS =====
+let chartOtMes=null, chartEstados=null, chartIngresos=null;
+
+window.renderEstadisticas=function(){
+  if(!usuario||usuario.rol!=='admin')return;
+  const meses=parseInt(document.getElementById('est-periodo').value)||6;
+  const ahora=new Date();
+  const desde=meses===0?new Date('2000-01-01'):new Date(ahora.getFullYear(),ahora.getMonth()-meses+1,1);
+
+  const filtradas=meses===0?ordenes:ordenes.filter(o=>{
+    if(!o.fecha)return false;
+    return new Date(o.fecha)>=desde;
+  });
+
+  // KPIs
+  const totalOT=filtradas.length;
+  const entregadas=filtradas.filter(o=>o.estado==='Entregado').length;
+  const ingresoTotal=filtradas.reduce((s,o)=>s+(parseFloat(o.costo)||0),0);
+  const enProceso=filtradas.filter(o=>o.estado==='En proceso'||o.estado==='Pendiente').length;
+
+  document.getElementById('est-kpis').innerHTML=`
+    <div class="stat-card c-t"><div class="stat-label">OT en período</div><div class="stat-val">${totalOT}</div><div class="stat-sub">${meses===0?'Todo el historial':'Últimos '+meses+' meses'}</div></div>
+    <div class="stat-card c-g"><div class="stat-label">Entregadas</div><div class="stat-val">${entregadas}</div><div class="stat-sub">${totalOT?Math.round(entregadas/totalOT*100):0}% del total</div></div>
+    <div class="stat-card c-n"><div class="stat-label">Ingresos totales</div><div class="stat-val" style="font-size:26px">$${ingresoTotal.toLocaleString('es-AR')}</div><div class="stat-sub">En reparaciones</div></div>
+    <div class="stat-card c-w"><div class="stat-label">En curso</div><div class="stat-val">${enProceso}</div><div class="stat-sub">Pendientes + En proceso</div></div>
+  `;
+
+  // Preparar meses para gráficos
+  const mesesLabels=[];
+  const mesesData={};
+  const mesesIngresos={};
+  const numMeses=meses===0?12:meses;
+  for(let i=numMeses-1;i>=0;i--){
+    const d=new Date(ahora.getFullYear(),ahora.getMonth()-i,1);
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const label=d.toLocaleDateString('es-AR',{month:'short',year:'2-digit'});
+    mesesLabels.push(label);
+    mesesData[key]=0;
+    mesesIngresos[key]=0;
+  }
+
+  filtradas.forEach(o=>{
+    if(!o.fecha)return;
+    const key=o.fecha.slice(0,7);
+    if(mesesData[key]!==undefined){mesesData[key]++;mesesIngresos[key]+=(parseFloat(o.costo)||0);}
+  });
+
+  const chartDefaults={
+    plugins:{legend:{labels:{color:'#888',font:{family:'Inter',size:11}}}},
+    scales:{x:{ticks:{color:'#666',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#666',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}
+  };
+
+  // Chart OT por mes
+  if(chartOtMes)chartOtMes.destroy();
+  chartOtMes=new Chart(document.getElementById('chart-ot-mes'),{
+    type:'bar',
+    data:{
+      labels:mesesLabels,
+      datasets:[{label:'OT',data:Object.values(mesesData),backgroundColor:'rgba(0,212,200,0.7)',borderColor:'#00d4c8',borderWidth:1,borderRadius:4}]
+    },
+    options:{...chartDefaults,plugins:{legend:{display:false}}}
+  });
+
+  // Chart estados (dona)
+  const estadosCounts={Pendiente:0,'En proceso':0,Listo:0,Entregado:0,Cancelado:0};
+  filtradas.forEach(o=>{if(estadosCounts[o.estado]!==undefined)estadosCounts[o.estado]++;});
+  if(chartEstados)chartEstados.destroy();
+  chartEstados=new Chart(document.getElementById('chart-estados'),{
+    type:'doughnut',
+    data:{
+      labels:Object.keys(estadosCounts),
+      datasets:[{data:Object.values(estadosCounts),backgroundColor:['rgba(245,158,11,.7)','rgba(96,165,250,.7)','rgba(0,212,200,.7)','rgba(34,197,94,.7)','rgba(100,100,100,.5)'],borderColor:'#1a1a1a',borderWidth:2}]
+    },
+    options:{plugins:{legend:{position:'right',labels:{color:'#888',font:{family:'Inter',size:11},boxWidth:12,padding:10}}},cutout:'65%'}
+  });
+
+  // Chart ingresos
+  if(chartIngresos)chartIngresos.destroy();
+  chartIngresos=new Chart(document.getElementById('chart-ingresos'),{
+    type:'line',
+    data:{
+      labels:mesesLabels,
+      datasets:[{label:'Ingresos $',data:Object.values(mesesIngresos),borderColor:'#ff6b1a',backgroundColor:'rgba(255,107,26,0.1)',fill:true,tension:.4,pointBackgroundColor:'#ff6b1a',pointRadius:4}]
+    },
+    options:{...chartDefaults,plugins:{legend:{display:false}},scales:{...chartDefaults.scales,y:{...chartDefaults.scales.y,ticks:{...chartDefaults.scales.y.ticks,callback:v=>'$'+Number(v).toLocaleString('es-AR')}}}}
+  });
+
+  // Ranking técnicos
+  const rankMap={};
+  filtradas.forEach(o=>{
+    if(!o.tecnicoId)return;
+    const nom=o.tecnicoNombre||nomTec(o.tecnicoId)||o.tecnicoId;
+    if(!rankMap[nom])rankMap[nom]={total:0,entregadas:0,ingresos:0};
+    rankMap[nom].total++;
+    if(o.estado==='Entregado')rankMap[nom].entregadas++;
+    rankMap[nom].ingresos+=(parseFloat(o.costo)||0);
+  });
+  const ranking=Object.entries(rankMap).sort((a,b)=>b[1].total-a[1].total);
+  const rankEl=document.getElementById('ranking-tecnicos');
+  if(!ranking.length){
+    rankEl.innerHTML='<div style="text-align:center;padding:2rem;color:var(--gris2);font-size:13px">No hay OT asignadas a técnicos en este período.</div>';
+  } else {
+    rankEl.innerHTML=ranking.map(([nom,d],i)=>`
+      <div style="display:flex;align-items:center;gap:.875rem;padding:.625rem 0;border-bottom:1px solid var(--borde2)">
+        <div style="width:26px;height:26px;border-radius:50%;background:${i===0?'var(--naranja)':i===1?'var(--turquesa3)':'var(--gris3)'};display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;flex-shrink:0">${i+1}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:500;color:var(--blanco);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nom}</div>
+          <div style="font-size:11px;color:var(--gris2)">${d.total} OT · ${d.entregadas} entregadas</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--turquesa)">${d.total}</div>
+          <div style="font-size:10px;color:var(--gris3)">$${d.ingresos.toLocaleString('es-AR')}</div>
+        </div>
+      </div>`).join('');
+  }
 }
 
 // ===== MODAL =====
