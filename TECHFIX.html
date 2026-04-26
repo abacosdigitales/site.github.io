@@ -561,6 +561,7 @@ footer{background:var(--negro3);border-top:1px solid var(--borde);padding:2rem 0
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -575,6 +576,9 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// EmailJS
+emailjs.init('5EmEhV_vQmQc9U8lI');
 
 window.abrirContrato=function(e){e&&e.preventDefault();document.getElementById('modal-contrato').classList.add('open')}
 window.cerrarContrato=function(){document.getElementById('modal-contrato').classList.remove('open')}
@@ -607,6 +611,22 @@ window.enviarSolicitud=async function(){
     };
     const docRef=await addDoc(collection(db,'solicitudes'),solicitud);
     const id='SOL-'+docRef.id.slice(-6).toUpperCase();
+
+    // Notificar al admin por email
+    try{
+      await emailjs.send('service_928zkc2','template_aa3u2q1',{
+        cliente_nombre: nombre+' '+apellido,
+        cliente_tel:    tel,
+        cliente_email:  mail,
+        equipo_tipo:    tipo,
+        equipo_marca:   [document.getElementById('f-marca').value.trim(), document.getElementById('f-modelo').value.trim()].filter(Boolean).join(' ')||'—',
+        urgencia:       document.getElementById('f-urgencia').value==='urgente'?'URGENTE':'Normal',
+        problema:       desc,
+        solicitud_id:   id,
+      });
+    }catch(emailErr){
+      console.warn('Email al admin no enviado:',emailErr);
+    }
 
     document.getElementById('form-solicitud').style.display='none';
     const sm=document.getElementById('success-msg');

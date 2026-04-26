@@ -8,6 +8,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -760,178 +761,261 @@ window.verOT=function(fid){
 window.imprimirOT=function(){
   const ot=ordenes.find(x=>x._id===currentDetId);
   if(!ot){alert('No se pudo obtener los datos de la OT.');return}
-  const tecNombre=nomTec(ot.tecnicoId);
-  const fecha=new Date().toLocaleDateString('es-AR');
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const PW=210,PH=297,ml=14,mr=14,cw=PW-ml-mr;
+  let y=14;
+
+  // Paleta
+  const C={
+    turquesa:[0,212,200],naranja:[255,107,26],
+    gris:[140,140,140],negro:[20,20,20],
+    fondoGris:[249,250,251],bordeGris:[220,220,220],
+    fondoProb:[255,247,237],bordProb:[254,215,170],
+    fondoDiag:[240,253,250],bordDiag:[153,246,228],
+    fondoGar:[240,253,250],bordGar:[153,246,228],
+    verde:[6,95,70]
+  };
+
+  // Helper: texto multilínea con altura calculada
+  function textBox(label,text,x,yp,w,bgRGB,brRGB){
+    // Setear font ANTES de calcular splitTextToSize para que mida correctamente
+    doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+    const maxW=w-7;
+    const lines=doc.splitTextToSize(text||'—',maxW);
+    const lineH=5.2;
+    const h=Math.max(14,6+lines.length*lineH+4);
+    doc.setFillColor(...bgRGB);doc.setDrawColor(...brRGB);doc.setLineWidth(0.25);
+    doc.roundedRect(x,yp,w,h,1,1,'FD');
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...C.gris);
+    doc.text(label.toUpperCase(),x+3,yp+4.5);
+    doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...C.negro);
+    doc.text(lines,x+3.5,yp+10);
+    return yp+h+3;
+  }
+
+  function fieldBox(label,val,x,yp,w){
+    doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+    const lines=doc.splitTextToSize(val||'—',w-7);
+    const h=Math.max(13,6+lines.length*5.2+4);
+    doc.setFillColor(...C.fondoGris);doc.setDrawColor(...C.bordeGris);doc.setLineWidth(0.25);
+    doc.roundedRect(x,yp,w,h,1,1,'FD');
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...C.gris);
+    doc.text(label.toUpperCase(),x+3,yp+4.5);
+    doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...C.negro);
+    doc.text(lines,x+3.5,yp+10);
+    return yp+h+3;
+  }
+
+  function sectionTitle(txt,yp){
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...C.turquesa);
+    doc.text(txt.toUpperCase(),ml,yp);
+    doc.setDrawColor(...C.bordeGris);doc.setLineWidth(0.25);
+    doc.line(ml,yp+1.5,PW-mr,yp+1.5);
+    return yp+6;
+  }
+
+  function fmtF(f){if(!f)return'—';const[yr,m,d]=f.split('-');return d+'/'+m+'/'+yr}
+
+  // ── HEADER ──
+  doc.setFont('helvetica','bold');doc.setFontSize(20);
+  doc.setTextColor(...C.turquesa);doc.text('TECH',ml,y);
+  const tw=doc.getTextWidth('TECH');
+  doc.setTextColor(...C.naranja);doc.text('FIX',ml+tw,y);
+  const fw=doc.getTextWidth('FIX');
+  doc.setFont('helvetica','normal');doc.setFontSize(13);doc.setTextColor(180,180,180);
+  doc.text(' PRO',ml+tw+fw,y);
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...C.gris);
+  doc.text('REPARACION DE EQUIPOS INFORMATICOS',ml,y+5);
+
   const otNum=(ot._id||'').slice(-6).toUpperCase();
-  const fmtF=ot.fecha?(function(){var p=ot.fecha.split('-');return p[2]+'/'+p[1]+'/'+p[0]})():'—';
-  const costoH=ot.costo>0
-    ?'<div class="costo-box"><div class="costo-label">Total a abonar</div><div class="costo-val">$'+Number(ot.costo).toLocaleString('es-AR')+'</div></div>'
-    :'';
-  const diagH=ot.diag
-    ?'<div class="box diag-box"><div class="box-label">Diagnóstico / trabajo realizado</div><div class="box-text">'+ot.diag+'</div></div>'
-    :'';
-  const notasH=ot.notas
-    ?'<div class="box" style="margin-top:10px;background:#f9fafb"><div class="box-label">Notas</div><div class="box-text" style="color:#6b7280">'+ot.notas+'</div></div>'
-    :'';
-  const tecH=tecNombre!=='—'
-    ?'<div class="section"><div class="section-title">Técnico asignado</div><div class="grid"><div class="field"><div class="field-label">Técnico</div><div class="field-value">'+tecNombre+'</div></div></div></div>'
-    :'';
-  const estClass='est-'+(ot.estado||'').replace(' ','-');
+  doc.setFont('helvetica','bold');doc.setFontSize(20);doc.setTextColor(...C.turquesa);
+  const otW=doc.getTextWidth('OT-'+otNum);
+  doc.text('OT-'+otNum,PW-mr-otW,y);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...C.gris);
+  const fechaStr='Emitida: '+new Date().toLocaleDateString('es-AR');
+  doc.text(fechaStr,PW-mr-doc.getTextWidth(fechaStr),y+5);
 
-  const html='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
-    +'<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">'
-    +'<title>OT-'+otNum+' — TechFix Pro</title>'
-    +'<style>'
-    +'*{margin:0;padding:0;box-sizing:border-box}'
-    +'body{font-family:Inter,sans-serif;font-size:13px;color:#111;background:#fff;-webkit-font-smoothing:antialiased}'
-    +'.page{width:210mm;min-height:297mm;margin:0 auto;padding:20mm 18mm;position:relative}'
-    +'@media print{'
-    +' body{margin:0}'
-    +' .page{width:100%;padding:14mm 14mm;margin:0}'
-    +' .page-break{page-break-before:always}'
-    +' *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}'
-    +'}'
-    +'.header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:3px solid #00d4c8;margin-bottom:20px}'
-    +'.logo{font-family:Rajdhani,sans-serif;font-size:24px;font-weight:700;letter-spacing:.03em;line-height:1}'
-    +'.logo .t{color:#00d4c8}.logo .f{color:#ff6b1a}'
-    +'.logo-sub{font-size:10px;color:#888;letter-spacing:.12em;text-transform:uppercase;margin-top:3px;font-weight:400}'
-    +'.ot-ref{text-align:right}'
-    +'.ot-ref .num{font-family:Rajdhani,sans-serif;font-size:28px;font-weight:700;color:#00d4c8;letter-spacing:.04em}'
-    +'.ot-ref .fch{font-size:11px;color:#999;margin-top:3px;font-weight:400}'
-    +'.estado-bar{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:18px}'
-    +'.estado-bar::before{content:"";width:6px;height:6px;border-radius:50%;display:inline-block}'
-    +'.est-Pendiente{background:#fef3c7;color:#92400e}.est-Pendiente::before{background:#d97706}'
-    +'.est-En-proceso{background:#dbeafe;color:#1e40af}.est-En-proceso::before{background:#3b82f6}'
-    +'.est-Listo{background:#d1fae5;color:#065f46}.est-Listo::before{background:#10b981}'
-    +'.est-Entregado{background:#d1fae5;color:#065f46}.est-Entregado::before{background:#10b981}'
-    +'.est-Cancelado{background:#f3f4f6;color:#6b7280}.est-Cancelado::before{background:#9ca3af}'
-    +'.section{margin-bottom:16px}'
-    +'.section-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#00b8ae;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #e5e7eb}'
-    +'.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}'
-    +'.field{background:#f9fafb;border-radius:5px;padding:8px 11px}'
-    +'.field-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9ca3af;margin-bottom:3px}'
-    +'.field-value{font-size:13px;color:#111;font-weight:500;font-family:Inter,sans-serif}'
-    +'.field-full{grid-column:1/-1}'
-    +'.box{border-radius:5px;padding:10px 12px;margin-bottom:8px}'
-    +'.box-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9ca3af;margin-bottom:4px}'
-    +'.box-text{font-size:13px;color:#111;line-height:1.55;font-weight:400}'
-    +'.prob-box{background:#fff7ed;border:1px solid #fed7aa}'
-    +'.diag-box{background:#f0fdfa;border:1px solid #99f6e4}'
-    +'.footer{margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;display:grid;grid-template-columns:1fr auto auto;gap:20px;align-items:end}'
-    +'.garantia{background:#f0fdfa;border:1px solid #99f6e4;border-radius:5px;padding:9px 12px;font-size:11px;color:#065f46;line-height:1.55}'
-    +'.costo-box{text-align:right;white-space:nowrap}'
-    +'.costo-label{font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:2px}'
-    +'.costo-val{font-family:Rajdhani,sans-serif;font-size:26px;font-weight:700;color:#ff6b1a;line-height:1}'
-    +'.firma{text-align:center;white-space:nowrap}'
-    +'.firma-linea{border-top:1px solid #374151;width:130px;margin:32px auto 5px}'
-    +'.firma-label{font-size:10px;color:#6b7280;font-weight:400}'
-    /* PAGE 2 - T&C */
-    +'.tc-header{text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #00d4c8}'
-    +'.tc-title{font-family:Rajdhani,sans-serif;font-size:22px;font-weight:700;color:#111;margin-bottom:4px}'
-    +'.tc-sub{font-size:11px;color:#888}'
-    +'.art{margin-bottom:16px}'
-    +'.art-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#ff6b1a;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #fed7aa}'
-    +'.art p,.art li{font-size:11px;color:#374151;line-height:1.6;margin-bottom:3px}'
-    +'.art ul,.art ol{padding-left:14px}'
-    +'.art strong{color:#111;font-weight:600}'
-    +'</style></head><body>'
+  doc.setDrawColor(...C.turquesa);doc.setLineWidth(0.8);doc.line(ml,y+8,PW-mr,y+8);
+  y+=14;
 
-    /* PAGE 1 - OT */
-    +'<div class="page">'
-    +'<div class="header">'
-    +'<div><div class="logo"><span class="t">TECH</span><span class="f">FIX</span> PRO</div><div class="logo-sub">Reparación de equipos informáticos</div></div>'
-    +'<div class="ot-ref"><div class="num">OT-'+otNum+'</div><div class="fch">Emitida: '+fecha+'</div></div>'
-    +'</div>'
-    +'<span class="estado-bar '+estClass+'">'+(ot.estado||'—')+'</span>'
+  // ── ESTADO BADGE ──
+  const estadoColors={
+    Pendiente:{bg:[254,243,199],txt:[146,64,14]},
+    'En proceso':{bg:[219,234,254],txt:[30,64,175]},
+    Listo:{bg:[209,250,229],txt:[6,95,70]},
+    Entregado:{bg:[209,250,229],txt:[6,95,70]},
+    Cancelado:{bg:[243,244,246],txt:[107,114,128]}
+  };
+  const ec=estadoColors[ot.estado]||estadoColors['Pendiente'];
+  const estTxt=ot.estado||'—';
+  doc.setFont('helvetica','bold');doc.setFontSize(9);
+  const estW=doc.getTextWidth(estTxt)+12;
+  doc.setFillColor(...ec.bg);doc.setDrawColor(...ec.txt);doc.setLineWidth(0.4);
+  doc.roundedRect(ml,y,estW,8,4,4,'FD');
+  doc.setTextColor(...ec.txt);doc.text(estTxt,ml+6,y+5.5);
+  y+=13;
 
-    +'<div class="section"><div class="section-title">Datos del cliente</div><div class="grid">'
-    +'<div class="field"><div class="field-label">Nombre</div><div class="field-value">'+(ot.cliente||'—')+'</div></div>'
-    +'<div class="field"><div class="field-label">Teléfono</div><div class="field-value">'+(ot.tel||'—')+'</div></div>'
-    +'<div class="field field-full"><div class="field-label">Email</div><div class="field-value">'+(ot.email||'—')+'</div></div>'
-    +'</div></div>'
+  // ── CLIENTE ──
+  y=sectionTitle('Datos del cliente',y);
+  const hw=(cw-3)/2;
+  y=Math.max(
+    fieldBox('Nombre',ot.cliente,ml,y,hw),
+    fieldBox('Telefono',ot.tel,ml+hw+3,y-((Math.max(fieldBox('Nombre',ot.cliente,ml,y,hw),y)-y)),hw)
+  );
+  // Recalculate side by side
+  const yBefore=y-((fieldBox('Nombre',ot.cliente,ml,y,hw))-y);
+  const yN=fieldBox('Nombre',ot.cliente,ml,yBefore,hw);
+  const yT=fieldBox('Telefono',ot.tel,ml+hw+3,yBefore,hw);
+  y=Math.max(yN,yT);
+  y=fieldBox('Email',ot.email,ml,y,cw);
 
-    +'<div class="section"><div class="section-title">Datos del equipo</div><div class="grid">'
-    +'<div class="field field-full"><div class="field-label">Equipo</div><div class="field-value">'+(ot.equipo||'—')+'</div></div>'
-    +'<div class="field"><div class="field-label">N° Serie</div><div class="field-value">'+(ot.serie||'—')+'</div></div>'
-    +'<div class="field"><div class="field-label">Fecha ingreso</div><div class="field-value">'+fmtF+'</div></div>'
-    +'</div></div>'
+  // ── EQUIPO ──
+  y=sectionTitle('Datos del equipo',y);
+  y=fieldBox('Equipo',ot.equipo,ml,y,cw);
+  const yS=fieldBox('N serie',ot.serie,ml,y,hw);
+  const yF=fieldBox('Fecha ingreso',fmtF(ot.fecha),ml+hw+3,y,hw);
+  y=Math.max(yS,yF);
 
-    +'<div class="section"><div class="section-title">Detalle del servicio</div>'
-    +'<div class="box prob-box"><div class="box-label">Problema reportado</div><div class="box-text">'+(ot.problema||'—')+'</div></div>'
-    +diagH+notasH+'</div>'
-    +tecH
+  // ── SERVICIO ──
+  y=sectionTitle('Detalle del servicio',y);
+  y=textBox('Problema reportado',ot.problema,ml,y,cw,C.fondoProb,C.bordProb);
+  if(ot.diag)y=textBox('Diagnostico / trabajo realizado',ot.diag,ml,y,cw,C.fondoDiag,C.bordDiag);
+  if(ot.notas)y=textBox('Notas',ot.notas,ml,y,cw,C.fondoGris,C.bordeGris);
 
-    +'<div class="footer">'
-    +'<div class="garantia">✓ Garantía de 90 días sobre la reparación realizada.<br>Presentar este comprobante al momento del retiro.</div>'
-    +costoH
-    +'<div class="firma"><div class="firma-linea"></div><div class="firma-label">Firma del cliente</div></div>'
-    +'</div></div>'
+  // ── TÉCNICO ──
+  const tecNombre=nomTec(ot.tecnicoId);
+  if(tecNombre!=='—'){
+    y=sectionTitle('Tecnico asignado',y);
+    y=fieldBox('Tecnico',tecNombre,ml,y,hw);
+  }
 
-    /* PAGE 2 - TÉRMINOS Y CONDICIONES */
-    +'<div class="page page-break">'
-    +'<div class="tc-header">'
-    +'<div class="logo" style="justify-content:center;display:flex;gap:4px;margin-bottom:8px"><span class="t">TECH</span><span class="f">FIX</span><span style="color:#111"> PRO</span></div>'
-    +'<div class="tc-title">Términos y Condiciones del Servicio</div>'
-    +'<div class="tc-sub">Versión vigente 2026 — Lea detenidamente antes de dejar su equipo.</div>'
-    +'</div>'
+  // ── FOOTER (pegado al contenido, min y=230) ──
+  y=Math.max(y+6,200);
+  doc.setDrawColor(...C.bordeGris);doc.setLineWidth(0.3);doc.line(ml,y,PW-mr,y);
+  y+=5;
 
-    +'<div class="art"><div class="art-title">Art. 1 — Ingreso del equipo</div><ul>'
-    +'<li>Al dejar el equipo, el cliente recibe una <strong>Orden de Trabajo</strong> que sirve como comprobante obligatorio para el retiro.</li>'
-    +'<li>El cliente debe declarar el estado previo visible del equipo. El taller no se responsabiliza por daños estéticos preexistentes no declarados.</li>'
-    +'<li>El cliente debe <strong>hacer copia de seguridad de sus datos</strong> antes de entregar el equipo.</li>'
-    +'</ul></div>'
+  // Garantia (izquierda, 85mm)
+  doc.setFillColor(...C.fondoGar);doc.setDrawColor(...C.bordGar);doc.setLineWidth(0.25);
+  doc.roundedRect(ml,y,85,14,1,1,'FD');
+  doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...C.verde);
+  doc.text('Garantia de 90 dias sobre la reparacion.',ml+3,y+5.5);
+  doc.setFont('helvetica','normal');
+  doc.text('Presentar comprobante al momento del retiro.',ml+3,y+10.5);
 
-    +'<div class="art"><div class="art-title">Art. 2 — Diagnóstico y presupuesto</div><ul>'
-    +'<li>El diagnóstico básico es <strong>sin cargo</strong>.</li>'
-    +'<li>El presupuesto se comunica al cliente antes de iniciar cualquier reparación.</li>'
-    +'<li>El cliente tiene <strong>48 horas hábiles</strong> para aprobar o rechazar el presupuesto.</li>'
-    +'<li>Si el cliente rechaza el presupuesto, deberá abonar un costo de diagnóstico antes de retirar el equipo.</li>'
-    +'</ul></div>'
+  // Costo (centro)
+  if(ot.costo>0){
+    const cx=ml+93;
+    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...C.gris);
+    doc.text('TOTAL A ABONAR',cx,y+4);
+    doc.setFont('helvetica','bold');doc.setFontSize(15);doc.setTextColor(...C.naranja);
+    doc.text('$'+Number(ot.costo).toLocaleString('es-AR'),cx,y+13);
+  }
 
-    +'<div class="art"><div class="art-title">Art. 3 — Reparación y repuestos</div><ul>'
-    +'<li>Todos los repuestos utilizados son nuevos o reacondicionados, informando al cliente en cada caso.</li>'
-    +'<li>En algunos equipos, la apertura puede implicar la <strong>pérdida de la garantía de fábrica</strong>. El cliente será informado previamente.</li>'
-    +'</ul></div>'
+  // Firma (derecha)
+  const fx=PW-mr-38;
+  doc.setDrawColor(120,120,120);doc.setLineWidth(0.3);doc.line(fx,y+14,PW-mr,y+14);
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...C.gris);
+  const fl='Firma del cliente';
+  doc.text(fl,fx+(38-doc.getTextWidth(fl))/2,y+18.5);
 
-    +'<div class="art"><div class="art-title">Art. 4 — Garantía</div><ul>'
-    +'<li>Todos los trabajos tienen una <strong>garantía de 90 días corridos</strong> desde la fecha de entrega, sobre la falla específicamente reparada.</li>'
-    +'<li>La garantía cubre defectos de mano de obra y falla del repuesto instalado. No cubre daños por mal uso, golpes, líquidos o intervención de terceros.</li>'
-    +'<li>Para hacer efectiva la garantía, el cliente deberá presentar la Orden de Trabajo original.</li>'
-    +'</ul></div>'
+  // ══ PÁGINA 2: TÉRMINOS Y CONDICIONES ══
+  doc.addPage();
+  y=16;
 
-    +'<div class="art"><div class="art-title">Art. 5 — Plazos de entrega</div><ul>'
-    +'<li>Los plazos informados son estimativos y pueden variar por disponibilidad de repuestos.</li>'
-    +'<li>El servicio urgente tiene disponibilidad limitada y puede implicar un recargo adicional informado al momento de la consulta.</li>'
-    +'</ul></div>'
+  // Logo centrado
+  doc.setFont('helvetica','bold');doc.setFontSize(15);
+  const logoW=doc.getTextWidth('TECHFIX PRO');
+  const lx=(PW-logoW)/2;
+  doc.setTextColor(...C.turquesa);doc.text('TECH',lx,y);
+  const lt=doc.getTextWidth('TECH');
+  doc.setTextColor(...C.naranja);doc.text('FIX',lx+lt,y);
+  doc.setFont('helvetica','normal');doc.setFontSize(13);
+  doc.setTextColor(80,80,80);doc.text(' PRO',lx+lt+doc.getTextWidth('FIX'),y);
 
-    +'<div class="art"><div class="art-title">Art. 6 — Retiro del equipo</div><ul>'
-    +'<li>El equipo debe retirarse dentro de los <strong>30 días corridos</strong> desde la notificación. Pasado ese plazo se aplicará un cargo de almacenamiento.</li>'
-    +'<li>El retiro se realiza exclusivamente con la presentación de la Orden de Trabajo.</li>'
-    +'</ul></div>'
+  y+=7;
+  doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(...C.negro);
+  const tcT='Terminos y Condiciones del Servicio';
+  doc.text(tcT,(PW-doc.getTextWidth(tcT))/2,y);
 
-    +'<div class="art"><div class="art-title">Art. 7 — Pagos</div><ul>'
-    +'<li>El pago se realiza al momento del retiro del equipo.</li>'
-    +'<li>Se aceptan efectivo, transferencia bancaria y tarjeta de débito/crédito.</li>'
-    +'<li>No se entregará el equipo sin cancelación total del servicio.</li>'
-    +'</ul></div>'
+  y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...C.gris);
+  const tcS='Version vigente 2026 — Lea detenidamente antes de dejar su equipo.';
+  doc.text(tcS,(PW-doc.getTextWidth(tcS))/2,y);
 
-    +'<div class="art"><div class="art-title">Art. 8 — Responsabilidades</div><ul>'
-    +'<li>El taller no se responsabiliza por pérdida de datos durante los trabajos, salvo acuerdo expreso de respaldo previo.</li>'
-    +'<li>La responsabilidad máxima del taller no superará el monto abonado por el servicio.</li>'
-    +'</ul></div>'
+  y+=3;
+  doc.setDrawColor(...C.turquesa);doc.setLineWidth(0.7);doc.line(ml,y,PW-mr,y);
+  y+=6;
 
-    +'<div style="margin-top:20px;padding:10px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:5px;font-size:11px;color:#92400e;line-height:1.6">'
-    +'Al dejar su equipo o firmar esta orden, el cliente declara haber leído, comprendido y aceptado todas las condiciones aquí establecidas.'
-    +'</div>'
-    +'</div>'
+  const arts=[
+    ['Art. 1 — Ingreso del equipo',[
+      'Al dejar el equipo, el cliente recibe una Orden de Trabajo como comprobante obligatorio para el retiro.',
+      'El cliente debe declarar el estado previo visible del equipo. El taller no se responsabiliza por danos esteticos preexistentes.',
+      'El cliente debe hacer copia de seguridad de sus datos antes de entregar el equipo.',
+    ]],
+    ['Art. 2 — Diagnostico y presupuesto',[
+      'El diagnostico basico es sin cargo.',
+      'El presupuesto se comunica al cliente antes de iniciar cualquier reparacion.',
+      'El cliente tiene 48 horas habiles para aprobar o rechazar el presupuesto.',
+      'Si rechaza el presupuesto, debera abonar un costo de diagnostico antes de retirar el equipo.',
+    ]],
+    ['Art. 3 — Reparacion y repuestos',[
+      'Todos los repuestos utilizados son nuevos o reacondicionados, informando al cliente en cada caso.',
+      'En algunos equipos, la apertura puede implicar la perdida de la garantia de fabrica. El cliente sera informado previamente.',
+    ]],
+    ['Art. 4 — Garantia',[
+      'Todos los trabajos tienen una garantia de 90 dias corridos desde la fecha de entrega, sobre la falla especificamente reparada.',
+      'La garantia cubre defectos de mano de obra y falla del repuesto instalado. No cubre danos por mal uso, golpes o liquidos.',
+      'Para hacer efectiva la garantia, el cliente debera presentar la Orden de Trabajo original.',
+    ]],
+    ['Art. 5 — Plazos de entrega',[
+      'Los plazos informados son estimativos y pueden variar por disponibilidad de repuestos.',
+      'El servicio urgente tiene disponibilidad limitada y puede implicar un recargo adicional.',
+    ]],
+    ['Art. 6 — Retiro del equipo',[
+      'El equipo debe retirarse dentro de los 30 dias corridos desde la notificacion. Pasado ese plazo se aplicara cargo de almacenamiento.',
+      'El retiro se realiza exclusivamente con la presentacion de la Orden de Trabajo.',
+    ]],
+    ['Art. 7 — Pagos',[
+      'El pago se realiza al momento del retiro del equipo.',
+      'Se aceptan efectivo, transferencia bancaria y tarjeta de debito/credito.',
+      'No se entregara el equipo sin cancelacion total del servicio.',
+    ]],
+    ['Art. 8 — Responsabilidades',[
+      'El taller no se responsabiliza por perdida de datos durante los trabajos, salvo acuerdo expreso de respaldo previo.',
+      'La responsabilidad maxima del taller no superara el monto abonado por el servicio.',
+    ]],
+  ];
 
-    +'<script>window.onload=function(){window.print();}<\/script>'
-    +'</body></html>';
+  arts.forEach(([titulo,items])=>{
+    if(y>270){doc.addPage();y=16;}
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...C.naranja);
+    doc.text(titulo.toUpperCase(),ml,y);
+    doc.setDrawColor(254,215,170);doc.setLineWidth(0.2);doc.line(ml,y+1.5,PW-mr,y+1.5);
+    y+=5.5;
+    items.forEach(item=>{
+      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...C.negro);
+      const lines=doc.splitTextToSize('- '+item,cw-3);
+      if(y+lines.length*4.5>278){doc.addPage();y=16;}
+      doc.text(lines,ml+2,y);
+      y+=lines.length*4.5+1.5;
+    });
+    y+=3;
+  });
 
-  const win=window.open('','_blank','width=900,height=750');
-  if(!win){alert('El navegador bloqueó la ventana emergente. Permitila para este sitio.');return}
-  win.document.write(html);
-  win.document.close();
+  // Nota final
+  if(y>270){doc.addPage();y=16;}
+  y+=2;
+  doc.setFillColor(255,247,237);doc.setDrawColor(254,215,170);doc.setLineWidth(0.25);
+  const noteText='Al dejar su equipo o firmar esta orden, el cliente declara haber leido, comprendido y aceptado todas las condiciones aqui establecidas.';
+  const noteLines=doc.splitTextToSize(noteText,cw-8);
+  const noteH=noteLines.length*5+8;
+  doc.roundedRect(ml,y,cw,noteH,1,1,'FD');
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(146,64,14);
+  doc.text(noteLines,ml+4,y+6);
+
+  doc.save('OT-'+otNum+'.pdf');
 }
 
 window.eliminarOT=async function(fid){
